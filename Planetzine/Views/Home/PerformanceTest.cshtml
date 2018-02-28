@@ -1,0 +1,110 @@
+﻿@model Planetzine.Models.PerformanceTest
+@{
+    ViewBag.Title = "Performance Test";
+}
+<br />
+@if (!string.IsNullOrEmpty(ViewBag.Message))
+{
+    <div class="alert alert-info">
+        @Html.Raw(ViewBag.Message)
+    </div>
+}
+
+<p>
+    <img src="~/Images/speed-164063_640.jpg" class="img-responsive" style="width: 400px;" />
+</p>
+
+@if (Model != null)
+{
+    <h2>Test settings</h2>
+    <table class="table table-striped">
+        <tr>
+            <td style="width: 50%;">Primary client</td>
+            <td>@Model.PrimaryClient.Name</td>
+        </tr>
+        <tr>
+            <td style="width: 50%;">Secondary client</td>
+            <td>@Model.SecondaryClient.Name</td>
+        </tr>
+        <tr>
+            <td style="width: 50%;">NumberOfWritesPrimary</td>
+            <td>@Model.NumberOfWritesPrimary</td>
+        </tr>
+        <tr>
+            <td>NumberOfWritesSecondary</td>
+            <td>@Model.NumberOfWritesSecondary</td>
+        </tr>
+        <tr>
+            <td>NumberOfQueryResultsPrimary</td>
+            <td>@Model.NumberOfQueryResultsPrimary</td>
+        </tr>
+        <tr>
+            <td>NumberOfQueryResultsSecondary</td>
+            <td>@Model.NumberOfQueryResultsSecondary</td>
+        </tr>
+        <tr>
+            <td>NumberOfRandomReadsPrimary</td>
+            <td>@Model.NumberOfRandomReadsPrimary</td>
+        </tr>
+        <tr>
+            <td>NumberOfRandomReadsSecondary</td>
+            <td>@Model.NumberOfRandomReadsSecondary</td>
+        </tr>
+        <tr>
+            <td>NumberOfUpsertsPrimary</td>
+            <td>@Model.NumberOfUpsertsPrimary</td>
+        </tr>
+        <tr>
+            <td>NumberOfUpsertsSecondary</td>
+            <td>@Model.NumberOfUpsertsSecondary</td>
+        </tr>
+        <tr>
+            <td>Parallelism</td>
+            <td>@Model.Parallelism</td>
+        </tr>
+    </table>
+
+    foreach (var result in Model.AllResults)
+    {
+        <h2>@result.Name results</h2>
+        <table class="table table-striped">
+            <tr>
+                <td style="width: 50%;">Elapsed milliseconds</td>
+                <td>@result.ElapsedMilliseconds</td>
+            </tr>
+            <tr>
+                <td>Cost (RUs)</td>
+                <td>@result.RUCost</td>
+            </tr>
+            <tr>
+                <td>Operations per second</td>
+                <td>@result.OperationPerSecond</td>
+            </tr>
+            <tr>
+                <td>RUs per second</td>
+                <td>@result.RUsPerSecond</td>
+            </tr>
+            <tr>
+                <td>RUs per document</td>
+                <td>@result.RUsPerDocument</td>
+            </tr>
+        </table>
+    }
+}
+
+@using (Html.BeginForm())
+{
+    <h3>Test the performance and RU costs</h3>
+    <p>
+        Number of inserts (primary): @Html.TextBox("NumberOfWritesPrimary", "500", new { width = "100px" })<br />
+        Number of inserts (secondary): @Html.TextBox("NumberOfWritesSecondary", "500", new { width = "100px" })<br />
+        Number of query results (primary): @Html.TextBox("numberOfQueryResultsPrimary", "500", new { width = "100px" })<br />
+        Number of query results (secondary): @Html.TextBox("numberOfQueryResultsSecondary", "500", new { width = "100px" })<br />
+        Number of random reads (primary): @Html.TextBox("numberOfRandomReadsPrimary", "500", new { width = "100px" })<br />
+        Number of random reads (secondary): @Html.TextBox("numberOfRandomReadsSecondary", "500", new { width = "100px" })<br />
+        Number of upserts (primary): @Html.TextBox("numberOfUpsertsPrimary", "500", new { width = "100px" })<br />
+        Number of upserts (secondary): @Html.TextBox("numberOfUpsertsSecondary", "500", new { width = "100px" })<br />
+        Parallelism: @Html.TextBox("parallelism", "10", new { width = "100px" })<br />
+        <button type="submit" name="button" value="simulate" class="btn btn-success">Start</button>
+    </p>
+}

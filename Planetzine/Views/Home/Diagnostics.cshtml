@@ -1,0 +1,20 @@
+﻿@model Planetzine.Models.Diagnostics
+@{
+    ViewBag.Title = "Diagnostics";
+}
+<br />
+@if (!string.IsNullOrEmpty(ViewBag.Message))
+{
+    <div class="alert alert-info">
+        @Html.Raw(ViewBag.Message)
+    </div>
+}
+
+@using (Html.BeginForm())
+{
+    <h3>Diagnostics</h3>
+    <p>
+        @Html.Raw(Model.Results)<br />
+        <button type="submit" name="button" value="delete" class="btn btn-success">Delete database</button>
+    </p>
+}
