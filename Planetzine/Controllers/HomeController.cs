@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using Planetzine.Models;
 
 namespace Planetzine.Controllers
 {
@@ -10,21 +11,21 @@ namespace Planetzine.Controllers
     {
         public ActionResult Index()
         {
-            return View();
+            var articles = new Articles { Items = Article.GetSampleArticles() };
+            return View(articles);
         }
 
         public ActionResult About()
         {
-            ViewBag.Message = "Your application description page.";
-
             return View();
         }
 
-        public ActionResult Contact()
+        [HttpGet]
+        public ActionResult Edit()
         {
-            ViewBag.Message = "Your contact page.";
+            var article = Article.GetSampleArticles()[0]; // Article.New();
 
-            return View();
+            return View(article);
         }
     }
 }

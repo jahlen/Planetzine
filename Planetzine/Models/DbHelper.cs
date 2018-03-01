@@ -45,7 +45,7 @@ namespace Planetzine.Models
 
             PreferredLocations = (ConfigurationManager.AppSettings["PreferredLocations" + ServerSuffix] ?? "").Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
-            // Create connection poliy (same for all endpoints/clients)
+            // Create connection policy
             ConnectionPolicy = new ConnectionPolicy
             {
                 ConnectionMode = (ConnectionMode)Enum.Parse(typeof(ConnectionMode), ConfigurationManager.AppSettings["ConnectionMode"]),
@@ -59,7 +59,7 @@ namespace Planetzine.Models
                 ConnectionPolicy.PreferredLocations.Add(location);
 
             Client = new DocumentClient(new Uri(EndpointUrl), AuthKey, ConnectionPolicy, ConsistencyLevel);
-            Client.OpenAsync(); // Preload routing tables
+            Client.OpenAsync(); // Preload routing tables, to avoid a startup latency on the first request.
         }
 
         public static async Task CreateDatabase()

@@ -1,10 +1,24 @@
-﻿@{
+﻿@model Planetzine.Models.Article
+@{
     ViewBag.Title = "Home Page";
 }
 
-<div class="row">
-    <div class="col-md-12">
-        <h2>Planetzine</h2>
-        <p>A sample app using Azure Cosmos DB</p>
-    </div>
+<p>&nbsp;</p>
+<h1>Compose article</h1>
+<div class="well well-lg">
+    <h3>Heading</h3>
+    <p>@Html.TextBoxFor(m => m.Heading, new { @style = "width: 100%;" })</p>
+    <h3>Image url</h3>
+    <p>@Html.TextBoxFor(m => m.ImageUrl, new { @style = "width: 100%;" })</p>
+    <h3>Tags</h3>
+    <p>@Html.TextBoxFor(m => m.Tags, new { @style = "width: 100%;" })</p>
+    <h3>Text</h3>
+    <p>@Html.TextAreaFor(m => m.Body, new { rows = 10, @style = "width: 100%;" })</p>
+    <h3>Author</h3>
+    <p>@Html.TextBoxFor(m => m.Author, new { @style = "width: 100%;" })</p>
+
+    <p class="text-right">
+        <button class="btn btn-success" name="button" value="save">Save</button>
+        <a class="btn btn-danger" href="@Url.Action("Index")">Cancel</a>
+    </p>
 </div>
