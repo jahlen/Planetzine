@@ -15,11 +15,11 @@
 {
     <div class="well">
         <div class="media">
-            <a class="pull-left" href="@Url.Action("View", new { article.ArticleId })">
+            <a class="pull-left" href="@Url.Action("View", new { article.ArticleId, article.Author })">
                 <img class="media-object img-rounded" style="width:160px;" src="@article.ImageUrl"/>
             </a>
             <div class="media-body">
-                <h3 class="media-heading"><a href="@Url.Action("View", new { article.ArticleId })">@article.Heading</a></h3>
+                <h3 class="media-heading"><a href="@Url.Action("View", new { article.ArticleId, article.Author })">@article.Heading</a></h3>
                 <p>@article.Excerpt</p>
                 <ul class="list-inline list-unstyled">
                     <li>&#x1F4C5; @article.PublishDateStr</li>
@@ -29,7 +29,6 @@
                     <li><a class="label label-info" href="@Url.Action("Index", new { tag })">@tag</a></li>
 }
                 </ul>
-                <p class="text-right"><a class="btn btn-sm btn-success" href="@Url.Action("Edit", new { article.ArticleId })">Edit</a></p>
             </div>
         </div>
     </div>

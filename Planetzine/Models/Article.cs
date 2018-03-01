@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using Newtonsoft.Json;
@@ -10,7 +11,7 @@ namespace Planetzine.Models
 {
     public class Article
     {
-        public const string CollectionId = "players";
+        public const string CollectionId = "articles";
         public const string PartitionKey = "/partitionId";
 
         [JsonProperty("id")]
@@ -50,7 +51,7 @@ namespace Planetzine.Models
         {
             return new Article
             {
-                ArticleId = Guid.NewGuid(),
+                ArticleId = Guid.Empty,
                 Heading = "Article Heading",
                 ImageUrl = "/Images/earth-11015_640.jpg",
                 Body = "Article text here...",
@@ -67,6 +68,8 @@ namespace Planetzine.Models
         public string PublishDateStr => PublishDate.ToString("MMMM dd, yyyy").Capitalize();
 
         public string TagsStr => string.Join(",", Tags);
+
+        public bool IsNew => ArticleId == Guid.Empty;
 
         public static Article[] GetSampleArticles()
         {
@@ -97,6 +100,45 @@ namespace Planetzine.Models
             };
 
             return new[] { article1, article2 };
+        }
+
+        public async Task Create()
+        {
+            await DbHelper.CreateDocument(this, CollectionId);
+        }
+
+        public async Task Upsert()
+        {
+            await DbHelper.UpsertDocument(this, CollectionId);
+        }
+
+        public async Task Delete()
+        {
+            await DbHelper.DeleteDocument(ArticleId.ToString(), Author, CollectionId);
+        }
+
+        public static async Task<Article> Read(Guid articleId, string author)
+        {
+            var article = await DbHelper.GetDocument<Article>(articleId.ToString(), author, CollectionId);
+            return article;
+        }
+
+        public static async Task<Article[]> GetAll()
+        {
+            var articles = await DbHelper.ExecuteQuery<Article>("SELECT * FROM articles", CollectionId, true);
+            return articles;
+        }
+
+        public static async Task<Article[]> SearchByTag(string tag)
+        {
+            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE a.Tag = '{tag}'", CollectionId, true);
+            return articles;
+        }
+
+        public static async Task<Article[]> SearchByAuthor(string author)
+        {
+            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE a.Author = '{author}'", CollectionId, true);
+            return articles;
         }
     }
 }

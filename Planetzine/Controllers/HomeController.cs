@@ -10,15 +10,30 @@ namespace Planetzine.Controllers
 {
     public class HomeController : Controller
     {
-        public ActionResult Index()
+        public async Task<ActionResult> Index(string tag, string author)
         {
-            var articles = new Articles { Items = Article.GetSampleArticles() };
+            await Planetzine.MvcApplication.DatabaseReady.Task;
+
+            var articles = new Articles();
+            if (!string.IsNullOrEmpty(tag))
+                articles.Items = await Article.SearchByTag(tag);
+            else if (!string.IsNullOrEmpty(author))
+                articles.Items = await Article.SearchByAuthor(author);
+            else
+                articles.Items = await Article.GetAll();
+
             return View(articles);
         }
 
         public ActionResult About()
         {
             return View();
+        }
+
+        public async Task<ActionResult> View(Guid articleId, string author)
+        {
+            var article = await Article.Read(articleId, author);
+            return View(article);
         }
 
         public ActionResult Diagnostics()
@@ -41,15 +56,18 @@ namespace Planetzine.Controllers
         }
 
         [HttpGet]
-        public ActionResult Edit()
+        public async Task<ActionResult> Edit(Guid articleId, string author, string message)
         {
-            var article = Article.GetSampleArticles()[0]; // Article.New();
+            var article = (articleId == Guid.Empty) ? Article.New() : await Article.Read(articleId, author);
+
+            if (!string.IsNullOrEmpty(message))
+                ViewBag.Message = message;
 
             return View(article);
         }
 
         [HttpPost]
-        public ActionResult Edit(Article article, string TagsStr, string button)
+        public async Task<ActionResult> Edit(Article article, string TagsStr, string button)
         {
             // Convert comma-separated list of tags to array
             article.Tags = TagsStr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToArray();
@@ -58,8 +76,16 @@ namespace Planetzine.Controllers
             switch (button)
             {
                 case "save":
-                    break;
+                    if (article.IsNew)
+                        article.ArticleId = Guid.NewGuid();
+                    await article.Upsert();
+                    return RedirectToAction("Edit", new { article.ArticleId, article.Author, message = "Article saved" });
                 case "preview":
+                    ViewBag.EnablePreview = true;
+                    break;
+                case "delete":
+                    await article.Delete();
+                    ViewBag.Message = "Article deleted";
                     break;
             }
 

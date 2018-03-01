@@ -124,19 +124,18 @@ namespace Planetzine.Models
             return response;
         }
 
-        public static async Task<T[]> ExecuteCrossPartitionQuery<T>(string top, string fields, string filter, string collectionId)
+        public static async Task DeleteDocument(string documentId, object partitionKey, string collectionId)
+        {
+            var uri = UriFactory.CreateDocumentUri(DatabaseId, collectionId, documentId);
+
+            var response = await Client.DeleteDocumentAsync(uri, new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });
+            RequestCharge += response.RequestCharge;
+        }
+
+        public static async Task<T[]> ExecuteQuery<T>(string sql, string collectionId, bool enableCrossPartitionQuery)
         {
             var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
-            if (!string.IsNullOrEmpty(filter))
-                filter = "WHERE " + filter;
-            else
-                filter = "";
-            top = top ?? "";
-            fields = !string.IsNullOrEmpty(fields) ? fields : "*";
-
-            var sql = new SqlQuerySpec($"SELECT {top} {fields} FROM {collectionId} AS c {filter}");
-
-            var query = Client.CreateDocumentQuery<T>(uri, sql, new FeedOptions { EnableCrossPartitionQuery = true }).AsDocumentQuery();
+            var query = Client.CreateDocumentQuery<T>(uri, sql, new FeedOptions { EnableCrossPartitionQuery = enableCrossPartitionQuery }).AsDocumentQuery();
 
             var results = new List<T>();
             while (query.HasMoreResults)
@@ -147,6 +146,22 @@ namespace Planetzine.Models
             }
 
             return results.ToArray();
+        }
+
+        public static async Task<T> ExecuteScalarQuery<T>(string sql, string collectionId, bool enableCrossPartitionQuery)
+        {
+            var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
+            var query = Client.CreateDocumentQuery<T>(uri, sql, new FeedOptions { EnableCrossPartitionQuery = enableCrossPartitionQuery }).AsDocumentQuery();
+
+            var results = new List<T>();
+            while (query.HasMoreResults)
+            {
+                var items = await query.ExecuteNextAsync<T>();
+                results.AddRange(items.AsEnumerable());
+                RequestCharge += items.RequestCharge;
+            }
+
+            return results[0];
         }
 
         public static void ResetRequestCharge()
