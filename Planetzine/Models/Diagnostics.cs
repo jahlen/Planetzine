@@ -7,6 +7,6 @@ namespace Planetzine.Models
 {
     public class Diagnostics
     {
-        public string Results;
+        public string Results = "";
     }
 }

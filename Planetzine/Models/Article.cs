@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
@@ -21,12 +22,14 @@ namespace Planetzine.Models
         public string PartitionId => Author;
 
         [JsonProperty("heading")]
+        [Required]
         public string Heading { get; set; }
 
         [JsonProperty("imageUrl")]
         public string ImageUrl { get; set; }
 
         [JsonProperty("body")]
+        [Required]
         [AllowHtml]
         public string Body { get; set; }
 
@@ -37,6 +40,7 @@ namespace Planetzine.Models
         public bool Visible { get; set; }
 
         [JsonProperty("author")]
+        [Required]
         public string Author { get; set; }
 
         [JsonProperty("publishDate")]
@@ -47,6 +51,18 @@ namespace Planetzine.Models
         [JsonConverter(typeof(IsoDateTimeConverter))]
         public DateTime LastUpdate { get; set; }
 
+        [JsonIgnore]
+        public string Excerpt => Body.RemoveHtmlTags().GetBeginning(300);
+
+        [JsonIgnore]
+        public string PublishDateStr => PublishDate.ToString("MMMM dd, yyyy").Capitalize();
+
+        [JsonIgnore]
+        public string TagsStr => string.Join(",", Tags);
+
+        [JsonIgnore]
+        public bool IsNew => ArticleId == Guid.Empty;
+
         public static Article New()
         {
             return new Article
@@ -54,22 +70,14 @@ namespace Planetzine.Models
                 ArticleId = Guid.Empty,
                 Heading = "Article Heading",
                 ImageUrl = "/Images/earth-11015_640.jpg",
-                Body = "Article text here...",
-                Tags = new[] { "News" },
+                Body = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed congue ultrices nulla nec malesuada. Etiam vitae risus sit amet dolor ultrices eleifend nec et nisi. Praesent pharetra egestas tortor ut faucibus. Suspendisse blandit nisi eu convallis consequat. Morbi ipsum nisl, viverra id eleifend et, semper gravida risus. Nunc eu erat vel elit feugiat suscipit. Maecenas turpis magna, bibendum vel lectus ac, fermentum tristique ipsum. Proin quis ipsum pretium, lacinia risus a, maximus turpis. Vivamus eu volutpat nibh, in sollicitudin purus.</p>\r\n",
+                Tags = new[] { "Azure", "Cloud", "Microsoft" },
                 Visible = true,
                 Author = "Anonymous",
                 PublishDate = DateTime.Now,
                 LastUpdate = DateTime.Now
             };
         }
-
-        public string Excerpt => Body.RemoveHtmlTags().GetBeginning(300);
-
-        public string PublishDateStr => PublishDate.ToString("MMMM dd, yyyy").Capitalize();
-
-        public string TagsStr => string.Join(",", Tags);
-
-        public bool IsNew => ArticleId == Guid.Empty;
 
         public static Article[] GetSampleArticles()
         {
@@ -131,13 +139,13 @@ namespace Planetzine.Models
 
         public static async Task<Article[]> SearchByTag(string tag)
         {
-            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE a.Tag = '{tag}'", CollectionId, true);
+            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE ARRAY_CONTAINS(a.tags, '{tag}')", CollectionId, true);
             return articles;
         }
 
         public static async Task<Article[]> SearchByAuthor(string author)
         {
-            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE a.Author = '{author}'", CollectionId, true);
+            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE a.author = '{author}'", CollectionId, true);
             return articles;
         }
     }

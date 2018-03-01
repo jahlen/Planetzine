@@ -12,7 +12,7 @@ namespace Planetzine.Controllers
     {
         public async Task<ActionResult> Index(string tag, string author)
         {
-            await Planetzine.MvcApplication.DatabaseReady.Task;
+            await Planetzine.MvcApplication.DatabaseReady.Task; // Make sure database and collection is created before continuing
 
             var articles = new Articles();
             if (!string.IsNullOrEmpty(tag))
@@ -36,8 +36,10 @@ namespace Planetzine.Controllers
             return View(article);
         }
 
-        public ActionResult Diagnostics()
+        public async Task<ActionResult> Diagnostics()
         {
+            await Planetzine.MvcApplication.DatabaseReady.Task; // Make sure database and collection is created before continuing
+
             var diagnostics = new Diagnostics();
             diagnostics.Results = DbHelper.Diagnostics();
             return View(diagnostics);
@@ -52,13 +54,16 @@ namespace Planetzine.Controllers
                 ViewBag.Message = "Database deleted!";
             }
 
-            return Diagnostics();
+            var diagnostics = new Diagnostics();
+            return View(diagnostics);
         }
 
         [HttpGet]
-        public async Task<ActionResult> Edit(Guid articleId, string author, string message)
+        public async Task<ActionResult> Edit(Guid? articleId, string author, string message)
         {
-            var article = (articleId == Guid.Empty) ? Article.New() : await Article.Read(articleId, author);
+            var article = !articleId.HasValue ? 
+                Article.New() : 
+                await Article.Read(articleId.Value, author);
 
             if (!string.IsNullOrEmpty(message))
                 ViewBag.Message = message;
@@ -71,6 +76,15 @@ namespace Planetzine.Controllers
         {
             // Convert comma-separated list of tags to array
             article.Tags = TagsStr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToArray();
+            if (article.Tags.Length == 0)
+                ModelState.AddModelError("Tags", "Tags must not be empty.");
+
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("<br/>", ModelState.Values.SelectMany(i => i.Errors).Select(e => e.ErrorMessage));
+                ViewBag.Message = $"Error:<br/>{errors}";
+                return View(article);
+            }
 
             button = (button ?? "").ToLower();
             switch (button)
