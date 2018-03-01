@@ -36,9 +36,6 @@ namespace Planetzine.Models
         [JsonProperty("tags")]
         public string[] Tags { get; set; }
 
-        [JsonProperty("visible")]
-        public bool Visible { get; set; }
-
         [JsonProperty("author")]
         [Required]
         public string Author { get; set; }
@@ -72,7 +69,6 @@ namespace Planetzine.Models
                 ImageUrl = "/Images/earth-11015_640.jpg",
                 Body = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed congue ultrices nulla nec malesuada. Etiam vitae risus sit amet dolor ultrices eleifend nec et nisi. Praesent pharetra egestas tortor ut faucibus. Suspendisse blandit nisi eu convallis consequat. Morbi ipsum nisl, viverra id eleifend et, semper gravida risus. Nunc eu erat vel elit feugiat suscipit. Maecenas turpis magna, bibendum vel lectus ac, fermentum tristique ipsum. Proin quis ipsum pretium, lacinia risus a, maximus turpis. Vivamus eu volutpat nibh, in sollicitudin purus.</p>\r\n",
                 Tags = new[] { "Azure", "Cloud", "Microsoft" },
-                Visible = true,
                 Author = "Anonymous",
                 PublishDate = DateTime.Now,
                 LastUpdate = DateTime.Now
@@ -88,7 +84,6 @@ namespace Planetzine.Models
                 ImageUrl = "/Images/earth-11015_640.jpg",
                 Body = "<p><strong>Azure Cosmos DB</strong> is Microsoft’s proprietary globally-distributed, multi-model database service for managing data at planet - scale launched in May 2017. It builds upon and extends the earlier Azure DocumentDB, which was released in 2014. It is schema-less and generally classified as a NoSQL database. </p><h4>Dynamically tunable</h4><p>With the current recommended option of \"partitioned collection\" type, Cosmos DB is dynamically tunable along three dimensions:</p>",
                 Tags = new[] { "Microsoft", "Databases" },
-                Visible = true,
                 Author = "John Doe",
                 PublishDate = DateTime.Now,
                 LastUpdate = DateTime.Now
@@ -101,7 +96,6 @@ namespace Planetzine.Models
                 ImageUrl = "/Images/earth-11015_640.jpg",
                 Body = "<p><strong>MongoDB</strong> is a free and open-source cross-platform document-oriented database program. Classified as a NoSQL database program, MongoDB uses JSON-like documents with schemas. MongoDB is developed by MongoDB Inc., and is published under a combination of the GNU Affero General Public License and the Apache License.</p><h4>History</h4><p>The software company began developing MongoDB in 2007 as a component of a planned platform as a service product. In 2009, the company shifted to an open source development model, with the company offering commercial support and other services. In 2013, 10gen changed its name to MongoDB Inc.[6]</p><p>On October 20, 2017, MongoDB became a publicly-traded company, listed on NASDAQ as MDB with an IPO price of $24 per share.</p>",
                 Tags = new[] { "Open source", "Databases" },
-                Visible = true,
                 Author = "Jane Doe",
                 PublishDate = DateTime.Now,
                 LastUpdate = DateTime.Now

@@ -156,6 +156,7 @@
     <Compile Include="Models\Diagnostics.cs" />
     <Compile Include="Models\ExtensionMethods.cs" />
     <Compile Include="Models\PerformanceTest.cs" />
+    <Compile Include="Models\WikipediaReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
