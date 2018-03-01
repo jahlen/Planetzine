@@ -93,5 +93,84 @@ namespace Planetzine.Models
             await Client.DeleteDatabaseAsync(uri);
         }
 
+        public static async Task CreateDocument(object document, string collectionId)
+        {
+            var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
+            var response = await Client.CreateDocumentAsync(uri, document);
+            RequestCharge += response.RequestCharge;
+        }
+
+        public static async Task UpsertDocument(object document, string collectionId)
+        {
+            var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
+            var response = await Client.UpsertDocumentAsync(uri, document);
+            RequestCharge += response.RequestCharge;
+        }
+
+        public static async Task ReplaceDocument(object document, string documentId, string collectionId)
+        {
+            var uri = UriFactory.CreateDocumentUri(DatabaseId, collectionId, documentId);
+            var response = await Client.ReplaceDocumentAsync(uri, document);
+            RequestCharge += response.RequestCharge;
+        }
+
+        public static async Task<DocumentResponse<T>> GetDocument<T>(string documentId, object partitionKey, string collectionId)
+        {
+            var uri = UriFactory.CreateDocumentUri(DatabaseId, collectionId, documentId);
+
+            var response = await Client.ReadDocumentAsync<T>(uri, new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });
+            RequestCharge += response.RequestCharge;
+
+            return response;
+        }
+
+        public static async Task<T[]> ExecuteCrossPartitionQuery<T>(string top, string fields, string filter, string collectionId)
+        {
+            var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
+            if (!string.IsNullOrEmpty(filter))
+                filter = "WHERE " + filter;
+            else
+                filter = "";
+            top = top ?? "";
+            fields = !string.IsNullOrEmpty(fields) ? fields : "*";
+
+            var sql = new SqlQuerySpec($"SELECT {top} {fields} FROM {collectionId} AS c {filter}");
+
+            var query = Client.CreateDocumentQuery<T>(uri, sql, new FeedOptions { EnableCrossPartitionQuery = true }).AsDocumentQuery();
+
+            var results = new List<T>();
+            while (query.HasMoreResults)
+            {
+                var items = await query.ExecuteNextAsync<T>();
+                results.AddRange(items.AsEnumerable());
+                RequestCharge += items.RequestCharge;
+            }
+
+            return results.ToArray();
+        }
+
+        public static void ResetRequestCharge()
+        {
+            RequestCharge = 0.0d;
+        }
+
+        public static string Diagnostics()
+        {
+            var results = $"Server name: {ServerName} <br/>";
+            results += $"Server suffix: {ServerSuffix} <br/>";
+            results += $"Total RequestCharge: {RequestCharge:f2} <br/>";
+            results += $"EndpointUrl: {EndpointUrl} <br/>";
+
+            results += $"ServiceEndpoint: {Client.ServiceEndpoint} <br/>";
+            results += $"ReadEndpoint: {Client.ReadEndpoint} <br/>";
+            results += $"WriteEndpoint: {Client.WriteEndpoint} <br/>";
+            results += $"ConsistencyLevel: {Client.ConsistencyLevel} <br/>";
+            results += $"ConnectionMode: {Client.ConnectionPolicy.ConnectionMode} <br/>";
+            results += $"ConnectionProtocol: {Client.ConnectionPolicy.ConnectionProtocol} <br/>";
+            results += $"MaxConnectionLimit: {Client.ConnectionPolicy.MaxConnectionLimit} <br/>";
+            results += $"PreferredLocations: {string.Join(", ", Client.ConnectionPolicy.PreferredLocations)} <br/>";
+
+            return results;
+        }
     }
 }

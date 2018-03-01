@@ -5,20 +5,27 @@
 
 <p>&nbsp;</p>
 <h1>Compose article</h1>
-<div class="well well-lg">
-    <h3>Heading</h3>
-    <p>@Html.TextBoxFor(m => m.Heading, new { @style = "width: 100%;" })</p>
-    <h3>Image url</h3>
-    <p>@Html.TextBoxFor(m => m.ImageUrl, new { @style = "width: 100%;" })</p>
-    <h3>Tags</h3>
-    <p>@Html.TextBoxFor(m => m.Tags, new { @style = "width: 100%;" })</p>
-    <h3>Text</h3>
-    <p>@Html.TextAreaFor(m => m.Body, new { rows = 10, @style = "width: 100%;" })</p>
-    <h3>Author</h3>
-    <p>@Html.TextBoxFor(m => m.Author, new { @style = "width: 100%;" })</p>
+@using (Html.BeginForm())
+{
+    @Html.HiddenFor(m => m.ArticleId)
+    <div class="well well-lg">
+        <h3>Heading</h3>
+        <p>@Html.TextBoxFor(m => m.Heading, new { @style = "width: 100%;" })</p>
+        <h3>Image url</h3>
+        <p>@Html.TextBoxFor(m => m.ImageUrl, new { @style = "width: 100%;" })</p>
+        <h3>Tags</h3>
+        <p>@Html.TextBox("TagsStr", Model.TagsStr, new { @style = "width: 100%;" })</p>
+        <h3>Text</h3>
+        <p>@Html.TextAreaFor(m => m.Body, new { rows = 10, @style = "width: 100%;" })</p>
+        <h3>Author</h3>
+        <p>@Html.TextBoxFor(m => m.Author, new { @style = "width: 100%;" })</p>
+        <h3>Publish Date</h3>
+        <p>@Html.TextBoxFor(m => m.PublishDate, Model.PublishDateStr, new { @style = "width: 100%;" })</p>
 
-    <p class="text-right">
-        <button class="btn btn-success" name="button" value="save">Save</button>
-        <a class="btn btn-danger" href="@Url.Action("Index")">Cancel</a>
-    </p>
-</div>
+        <p class="text-right">
+            <button class="btn btn-success" name="button" value="save">Save</button>
+            <button class="btn btn-info" name="button" value="save">Preview</button>
+            <a class="btn btn-danger" href="@Url.Action("Index")">Cancel</a>
+        </p>
+    </div>
+}

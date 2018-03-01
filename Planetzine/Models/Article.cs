@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -13,36 +14,37 @@ namespace Planetzine.Models
         public const string PartitionKey = "/partitionId";
 
         [JsonProperty("id")]
-        public Guid ArticleId;
+        public Guid ArticleId { get; set; }
 
         [JsonProperty("partitionId")]
         public string PartitionId => Author;
 
         [JsonProperty("heading")]
-        public string Heading;
+        public string Heading { get; set; }
 
         [JsonProperty("imageUrl")]
-        public string ImageUrl;
+        public string ImageUrl { get; set; }
 
         [JsonProperty("body")]
-        public string Body;
+        [AllowHtml]
+        public string Body { get; set; }
 
         [JsonProperty("tags")]
-        public string[] Tags;
+        public string[] Tags { get; set; }
 
         [JsonProperty("visible")]
-        public bool Visible;
+        public bool Visible { get; set; }
 
         [JsonProperty("author")]
-        public string Author;
+        public string Author { get; set; }
 
         [JsonProperty("publishDate")]
         [JsonConverter(typeof(IsoDateTimeConverter))]
-        public DateTime PublishDate;
+        public DateTime PublishDate { get; set; }
 
         [JsonProperty("lastUpdate")]
         [JsonConverter(typeof(IsoDateTimeConverter))]
-        public DateTime LastUpdate;
+        public DateTime LastUpdate { get; set; }
 
         public static Article New()
         {
@@ -63,6 +65,8 @@ namespace Planetzine.Models
         public string Excerpt => Body.RemoveHtmlTags().GetBeginning(300);
 
         public string PublishDateStr => PublishDate.ToString("MMMM dd, yyyy").Capitalize();
+
+        public string TagsStr => string.Join(",", Tags);
 
         public static Article[] GetSampleArticles()
         {
