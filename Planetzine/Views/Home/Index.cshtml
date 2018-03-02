@@ -7,8 +7,12 @@
     <div class="col-md-12">
         <h1>Planetzine</h1>
         <p>A sample app using Azure Cosmos DB</p>
-        <p><img class="img-responsive" src="~/Images/news-1074604_1280.jpg"/></p>
-        <h2>Latest articles</h2>
+        <p><img class="img-responsive" src="~/Images/news-1074604_1280.jpg" /></p>
+@using (Html.BeginForm("Index", "Home", FormMethod.Get))
+{
+    <p class="text-right">@Html.TextBox("FreeTextSearch", "", new { placeholder = "Free text search...", style = "width: 200px;" }) <button class="btn btn-info">Search</button></p>
+}
+    <h2>Articles</h2>
     </div>
 
 @foreach (var article in Model.Items)

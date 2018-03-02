@@ -75,38 +75,15 @@ namespace Planetzine.Models
             };
         }
 
-        public static Article[] GetSampleArticles()
-        {
-            var article1 = new Article
-            {
-                ArticleId = Guid.NewGuid(),
-                Heading = "Azure Cosmos DB",
-                ImageUrl = "/Images/earth-11015_640.jpg",
-                Body = "<p><strong>Azure Cosmos DB</strong> is Microsoft’s proprietary globally-distributed, multi-model database service for managing data at planet - scale launched in May 2017. It builds upon and extends the earlier Azure DocumentDB, which was released in 2014. It is schema-less and generally classified as a NoSQL database. </p><h4>Dynamically tunable</h4><p>With the current recommended option of \"partitioned collection\" type, Cosmos DB is dynamically tunable along three dimensions:</p>",
-                Tags = new[] { "Microsoft", "Databases" },
-                Author = "John Doe",
-                PublishDate = DateTime.Now,
-                LastUpdate = DateTime.Now
-            };
-
-            var article2 = new Article
-            {
-                ArticleId = Guid.NewGuid(),
-                Heading = "MongoDB",
-                ImageUrl = "/Images/earth-11015_640.jpg",
-                Body = "<p><strong>MongoDB</strong> is a free and open-source cross-platform document-oriented database program. Classified as a NoSQL database program, MongoDB uses JSON-like documents with schemas. MongoDB is developed by MongoDB Inc., and is published under a combination of the GNU Affero General Public License and the Apache License.</p><h4>History</h4><p>The software company began developing MongoDB in 2007 as a component of a planned platform as a service product. In 2009, the company shifted to an open source development model, with the company offering commercial support and other services. In 2013, 10gen changed its name to MongoDB Inc.[6]</p><p>On October 20, 2017, MongoDB became a publicly-traded company, listed on NASDAQ as MDB with an IPO price of $24 per share.</p>",
-                Tags = new[] { "Open source", "Databases" },
-                Author = "Jane Doe",
-                PublishDate = DateTime.Now,
-                LastUpdate = DateTime.Now
-            };
-
-            return new[] { article1, article2 };
-        }
-
         public async Task Create()
         {
             await DbHelper.CreateDocument(this, CollectionId);
+        }
+
+        public async static Task Create(IEnumerable<Article> articles)
+        {
+            foreach (var article in articles)
+                await article.Create();
         }
 
         public async Task Upsert()
@@ -141,6 +118,32 @@ namespace Planetzine.Models
         {
             var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE a.author = '{author}'", CollectionId, true);
             return articles;
+        }
+
+        public static async Task<Article[]> SearchByFreetext(string freetext)
+        {
+            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE CONTAINS(UPPER(a.body), '{freetext.ToUpper()}')", CollectionId, true);
+            return articles;
+        }
+
+        public async static Task<long> GetNumberOfArticles()
+        {
+            var articleCount = await DbHelper.ExecuteScalarQuery<dynamic>("SELECT VALUE COUNT(1) FROM articles", Article.CollectionId, true);
+            return articleCount;
+        }
+
+        public async static Task<Article[]> GetSampleArticles()
+        {
+            var titles = new[] { "Cosmos_DB", "Redis", "Voldemort_(distributed_data_store)" };
+
+            var articles = new List<Article>();
+            foreach (var title in titles)
+            {
+                var article = await WikipediaReader.GenerateArticleFromWikipedia(title);
+                articles.Add(article);
+            }
+
+            return articles.ToArray();
         }
     }
 }

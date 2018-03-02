@@ -25,22 +25,13 @@ namespace Planetzine
 
         private async void InitDatabase()
         {
-            var titles = new[] { "Cosmos_DB", "Redis", "Voldemort_(distributed_data_store)" };
-
             // Create the database and collection if it doesn't already exist
             await DbHelper.CreateDatabase();
             await DbHelper.CreateCollection(Article.CollectionId, Article.PartitionKey);
 
             // If the database if empty, insert some sample articles
-            var articleCount = await DbHelper.ExecuteScalarQuery<dynamic>("SELECT VALUE COUNT(1) FROM articles", Article.CollectionId, true);
-            if (articleCount == 0)
-            {
-                foreach (var title in titles)
-                {
-                    var article = await WikipediaReader.GenerateArticleFromWikipedia(title);
-                    await article.Create();
-                }
-            }
+            if (await Article.GetNumberOfArticles() == 0)
+                await Article.Create(await Article.GetSampleArticles());
 
             DatabaseReady.SetResult(true);
         }

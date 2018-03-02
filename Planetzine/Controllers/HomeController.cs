@@ -10,7 +10,7 @@ namespace Planetzine.Controllers
 {
     public class HomeController : Controller
     {
-        public async Task<ActionResult> Index(string tag, string author)
+        public async Task<ActionResult> Index(string tag, string author, string freeTextSearch)
         {
             await Planetzine.MvcApplication.DatabaseReady.Task; // Make sure database and collection is created before continuing
 
@@ -19,6 +19,8 @@ namespace Planetzine.Controllers
                 articles.Items = await Article.SearchByTag(tag);
             else if (!string.IsNullOrEmpty(author))
                 articles.Items = await Article.SearchByAuthor(author);
+            else if (!string.IsNullOrEmpty(freeTextSearch))
+                articles.Items = await Article.SearchByFreetext(freeTextSearch);
             else
                 articles.Items = await Article.GetAll();
 
@@ -48,10 +50,18 @@ namespace Planetzine.Controllers
         [HttpPost]
         public async Task<ActionResult> Diagnostics(string button)
         {
+            button = button.ToLower();
             if (button == "delete")
             {
                 await DbHelper.DeleteDatabase();
-                ViewBag.Message = "Database deleted!";
+                ViewBag.Message = "Database deleted! It will be recreated next time you restart the application.";
+            }
+            if (button == "reset")
+            {
+                await DbHelper.DeleteCollection(Article.CollectionId);
+                await DbHelper.CreateCollection(Article.CollectionId, Article.PartitionKey);
+                await Article.Create(await Article.GetSampleArticles());
+                ViewBag.Message = "Articles recreated.";
             }
 
             var diagnostics = new Diagnostics();

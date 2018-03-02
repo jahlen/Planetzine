@@ -19,7 +19,7 @@ namespace Planetzine.Models
         private static readonly Regex regexStrong = new Regex(@"'''(.*?)'''");
         private static readonly Regex regexHeading = new Regex(@"==(.*?)==");
         private static readonly Regex regexCategory = new Regex(@"\[\[Category:(.*?)\]\]");
-        private static readonly Regex regexLink = new Regex(@"\[\[(.*?)\]\]");
+        private static readonly Regex regexLink = new Regex(@"\[\[([^|\]]+)(|[^\[\]]+)?\]\]");
 
         public static string CreateQueryUrl(string title)
         {
