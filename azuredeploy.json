@@ -2,14 +2,14 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"applicationName": {
+		"siteName": {
 			"type": "string",
 			"defaultValue": "[concat('planetzine-', uniqueString(subscription().subscriptionId))]",
 			"metadata": {
 				"description": "The name of the database account and web app you want to create. Must be unique."
 			}
 		},
-		"primaryLocation": {
+		"siteLocation": {
 			"type": "string",
 			"defaultValue": "East US",
 			"metadata": {
@@ -18,29 +18,29 @@
 		},
 		"secondaryLocation": {
 			"type": "string",
-			"defaultValue": "West Europe",
+			"defaultValue": "",
 			"metadata": {
 				"description": "The name of the secondary location (or leave blank to skip)."
 			}
 		}
 	},
 	"variables": {
-		"webAppPrimaryName": "[concat(parameters('applicationName'), '-', replace(parameters('primaryLocation'), ' ', '-'))]",
-		"webAppSecondaryName": "[concat(parameters('applicationName'), '-', replace(parameters('secondaryLocation'), ' ', '-'))]",
-		"createSecondaryLocation": "[and(greater(length(parameters('secondaryLocation')), 0), not(equals(parameters('primaryLocation'), parameters('secondaryLocation'))))]",
+		"webAppPrimaryName": "[concat(parameters('siteName'), '-', replace(parameters('siteLocation'), ' ', '-'))]",
+		"webAppSecondaryName": "[concat(parameters('siteName'), '-', replace(parameters('secondaryLocation'), ' ', '-'))]",
+		"createSecondaryLocation": "[and(greater(length(parameters('secondaryLocation')), 0), not(equals(parameters('siteLocation'), parameters('secondaryLocation'))))]",
 		"appServicePlanSku": "S1",
 		"sourceUrl": "https://github.com/jahlen/Planetzine.git"
 	},
 	"resources": [
 		{
-			"name": "[parameters('applicationName')]",
+			"name": "[parameters('siteName')]",
 			"type": "Microsoft.DocumentDB/databaseAccounts",
 			"kind": "GlobalDocumentDB",
 			"apiVersion": "2015-04-08",
 			"tags": {
 				"defaultExperience": "DocumentDB"
 			},
-			"location": "[parameters('primaryLocation')]",
+			"location": "[parameters('siteLocation')]",
 			"properties": {
 				"databaseAccountOfferType": "Standard",
 				"consistencyPolicy": {
@@ -48,14 +48,14 @@
 					"maxIntervalInSeconds": 5,
 					"maxStalenessPrefix": 100
 				},
-				"name": "[parameters('applicationName')]"
+				"name": "[parameters('siteName')]"
 			}
 		},
 		{
 			"type": "Microsoft.Web/serverfarms",
 			"apiVersion": "2016-09-01",
 			"name": "[variables('webAppPrimaryName')]",
-			"location": "[parameters('primaryLocation')]",
+			"location": "[parameters('siteLocation')]",
 			"sku": {
 				"name": "[variables('appServicePlanSku')]",
 				"capacity": 1
@@ -65,7 +65,7 @@
 			"type": "Microsoft.Web/Sites",
 			"apiVersion": "2015-08-01",
 			"name": "[variables('webAppPrimaryName')]",
-			"location": "[parameters('primaryLocation')]",
+			"location": "[parameters('siteLocation')]",
 			"dependsOn": [
 				"[concat('Microsoft.Web/serverFarms/', variables('webAppPrimaryName'))]"
 			],
@@ -77,11 +77,11 @@
 					"appSettings": [
 						{
 							"Name": "EndpointURL",
-							"Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('applicationName'))).documentEndpoint]"
+							"Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('siteName'))).documentEndpoint]"
 						},
 						{
 							"Name": "AuthKey",
-							"Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('applicationName')), '2015-04-08').primaryMasterKey]"
+							"Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('siteName')), '2015-04-08').primaryMasterKey]"
 						}
 					]
 				}
@@ -115,11 +115,11 @@
 					"appSettings": [
 						{
 							"Name": "EndpointURL",
-							"Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('applicationName'))).documentEndpoint]"
+							"Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('siteName'))).documentEndpoint]"
 						},
 						{
 							"Name": "AuthKey",
-							"Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('applicationName')), '2015-04-08').primaryMasterKey]"
+							"Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('siteName')), '2015-04-08').primaryMasterKey]"
 						}
 					]
 				}
