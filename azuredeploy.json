@@ -16,14 +16,34 @@
 				"description": "The name of the primary location."
 			}
 		},
-		"secondaryLocation": {
-			"type": "string",
-			"defaultValue": "",
-			"metadata": {
-				"description": "The name of the secondary location (or leave blank to skip)."
-			}
-		}
-	},
+    "secondaryLocation": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The name of the secondary location (or leave blank to skip)."
+      },
+      "sku": {
+        "type": "string",
+        "defaultValue": "",
+        "metadata": {
+          "description": "The SKU of the webapps."
+        }
+      },
+      "repoUrl": {
+        "type": "string",
+        "defaultValue": "",
+        "metadata": {
+          "description": "The address of the GitHub repo."
+        }
+      },
+      "branch": {
+        "type": "string",
+        "defaultValue": "",
+        "metadata": {
+          "description": "The branch of the GitHub repo."
+        }
+      }
+    },
 	"variables": {
 		"webAppPrimaryName": "[concat(parameters('siteName'), '-', replace(parameters('siteLocation'), ' ', '-'))]",
 		"webAppSecondaryName": "[concat(parameters('siteName'), '-', replace(parameters('secondaryLocation'), ' ', '-'))]",
