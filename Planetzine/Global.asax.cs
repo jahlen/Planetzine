@@ -25,6 +25,9 @@ namespace Planetzine
 
         private async void InitDatabase()
         {
+            // Init must be called before using the DbHelper
+            await DbHelper.Init();
+
             // Create the database and collection if it doesn't already exist
             await DbHelper.CreateDatabase();
             await DbHelper.CreateCollection(Article.CollectionId, Article.PartitionKey);

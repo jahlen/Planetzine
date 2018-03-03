@@ -108,15 +108,15 @@ namespace Planetzine.Models
             return articles;
         }
 
-        public static async Task<Article[]> SearchByTag(string tag)
-        {
-            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE ARRAY_CONTAINS(a.tags, '{tag}')", CollectionId, true);
-            return articles;
-        }
-
         public static async Task<Article[]> SearchByAuthor(string author)
         {
             var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE a.author = '{author}'", CollectionId, true);
+            return articles;
+        }
+
+        public static async Task<Article[]> SearchByTag(string tag)
+        {
+            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE ARRAY_CONTAINS(a.tags, '{tag}')", CollectionId, true);
             return articles;
         }
 

@@ -15,18 +15,14 @@ namespace Planetzine.Models
         public static readonly string DatabaseId;
         public static readonly int InitialThroughput;
         public static readonly int MaxConnectionLimit;
-        public static ConsistencyLevel ConsistencyLevel;
+        public static readonly ConsistencyLevel ConsistencyLevel;
         public static readonly string EndpointUrl;
         public static readonly string AuthKey;
-        public static readonly ConnectionPolicy ConnectionPolicy;
 
-        public static readonly string ServerName;
-        public static readonly string ServerSuffix;
-        public static readonly DocumentClient Client;
-        private static readonly string[] PreferredLocations;
+        public static string CurrentRegion;
+        public static ConnectionPolicy ConnectionPolicy;
+        public static DocumentClient Client;
         public static double RequestCharge;
-
-        private static readonly char[] delimiter = new char[] { ',' };
 
         static DbHelper()
         {
@@ -38,12 +34,15 @@ namespace Planetzine.Models
 
             EndpointUrl = ConfigurationManager.AppSettings["EndpointURL"];
             AuthKey = ConfigurationManager.AppSettings["AuthKey"];
+        }
 
-            // Server specific settings
-            ServerName = Environment.GetEnvironmentVariable("APPSETTING_WEBSITE_SITE_NAME") ?? "local"; // The name of the app service
-            ServerSuffix = ServerName.Contains("-") ? $"-{ServerName.Split('-')[1]}" : ""; // Will be -eastus, -westeu or similar
-
-            PreferredLocations = (ConfigurationManager.AppSettings["PreferredLocations" + ServerSuffix] ?? "").Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+        /// <summary>
+        /// Init() method must be called before using any other methods on DbHelper. Creates the DocumentClient.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task Init()
+        {
+            CurrentRegion = GetCurrentAzureRegion();
 
             // Create connection policy
             ConnectionPolicy = new ConnectionPolicy
@@ -54,12 +53,38 @@ namespace Planetzine.Models
                 MaxConnectionLimit = MaxConnectionLimit,
                 RetryOptions = new RetryOptions { MaxRetryAttemptsOnThrottledRequests = 10, MaxRetryWaitTimeInSeconds = 30 }
             };
-
-            foreach (var location in PreferredLocations)
-                ConnectionPolicy.PreferredLocations.Add(location);
+            ConnectionPolicy.PreferredLocations.Add(await GetNearestAzureReadRegion());
 
             Client = new DocumentClient(new Uri(EndpointUrl), AuthKey, ConnectionPolicy, ConsistencyLevel);
-            Client.OpenAsync(); // Preload routing tables, to avoid a startup latency on the first request.
+            await Client.OpenAsync(); // Preload routing tables, to avoid a startup latency on the first request.
+        }
+
+        private static async Task<IEnumerable<DatabaseAccountLocation>> GetAvailableAzureReadRegions()
+        {
+            using (var client = new DocumentClient(new Uri(EndpointUrl), AuthKey, ConnectionPolicy.Default))
+            {
+                var account = await client.GetDatabaseAccountAsync();
+                return account.ReadableLocations;
+            }
+        }
+
+        private static string GetCurrentAzureRegion()
+        {
+            return Environment.GetEnvironmentVariable("REGION_NAME") ?? "local";
+        }
+
+        private static async Task<string> GetNearestAzureReadRegion()
+        {
+            var regions = (await GetAvailableAzureReadRegions()).ToDictionary(region => region.Name);
+            var currentRegion = GetCurrentAzureRegion();
+
+            // If there is a readable location in the current region, chose it
+            if (regions.ContainsKey(currentRegion))
+                return currentRegion;
+
+            // Otherwise just pick the first region
+            // TODO: Replace this with some logic that selects a more optimal read region (for instance using a table)
+            return regions.Values.First().Name;
         }
 
         public static async Task CreateDatabase()
@@ -171,8 +196,8 @@ namespace Planetzine.Models
 
         public static string Diagnostics()
         {
-            var results = $"Server name: {ServerName} <br/>";
-            results += $"Server suffix: {ServerSuffix} <br/>";
+            var results = $"Server name: {Environment.GetEnvironmentVariable("APPSETTING_WEBSITE_SITE_NAME") ?? "local"} <br/>";
+            results += $"Region: {CurrentRegion} <br/>";
             results += $"Total RequestCharge: {RequestCharge:f2} <br/>";
             results += $"EndpointUrl: {EndpointUrl} <br/>";
 
