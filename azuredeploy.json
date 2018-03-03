@@ -23,13 +23,6 @@
         "description": "The name of the secondary location (or leave blank to skip)."
       }
     },
-    "sku": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "The SKU of the webapps."
-      }
-    },
     "repoUrl": {
       "type": "string",
       "defaultValue": "",
@@ -106,6 +99,19 @@
             }
           ]
         }
+      }
+    },
+    {
+      "name": "web",
+      "type": "sourcecontrols",
+      "apiVersion": "2015-08-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('webAppPrimaryName'))]"
+      ],
+      "properties": {
+        "RepoUrl": "[parameters('repoUrl')]",
+        "branch": "[parameters('branch')]",
+        "IsManualIntegration": true
       }
     },
     {
