@@ -1,150 +1,151 @@
 {
-	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-	"contentVersion": "1.0.0.0",
-	"parameters": {
-		"siteName": {
-			"type": "string",
-			"defaultValue": "[concat('planetzine-', uniqueString(subscription().subscriptionId))]",
-			"metadata": {
-				"description": "The name of the database account and web app you want to create. Must be unique."
-			}
-		},
-		"siteLocation": {
-			"type": "string",
-			"defaultValue": "East US",
-			"metadata": {
-				"description": "The name of the primary location."
-			}
-		},
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "siteName": {
+      "type": "string",
+      "defaultValue": "[concat('planetzine-', uniqueString(subscription().subscriptionId))]",
+      "metadata": {
+        "description": "The name of the database account and web app you want to create. Must be unique."
+      }
+    },
+    "siteLocation": {
+      "type": "string",
+      "defaultValue": "East US",
+      "metadata": {
+        "description": "The name of the primary location."
+      }
+    },
     "secondaryLocation": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
         "description": "The name of the secondary location (or leave blank to skip)."
+      }
+    },
+    "sku": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The SKU of the webapps."
+      }
+    },
+    "repoUrl": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The address of the GitHub repo."
+      }
+    },
+    "branch": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The branch of the GitHub repo."
+      }
+    }
+  },
+  "variables": {
+    "webAppPrimaryName": "[concat(parameters('siteName'), '-', replace(parameters('siteLocation'), ' ', '-'))]",
+    "webAppSecondaryName": "[concat(parameters('siteName'), '-', replace(parameters('secondaryLocation'), ' ', '-'))]",
+    "createSecondaryLocation": "[and(greater(length(parameters('secondaryLocation')), 0), not(equals(parameters('siteLocation'), parameters('secondaryLocation'))))]",
+    "appServicePlanSku": "S1",
+    "sourceUrl": "https://github.com/jahlen/Planetzine.git"
+  },
+  "resources": [
+    {
+      "name": "[parameters('siteName')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "kind": "GlobalDocumentDB",
+      "apiVersion": "2015-04-08",
+      "tags": {
+        "defaultExperience": "DocumentDB"
       },
+      "location": "[parameters('siteLocation')]",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "name": "[parameters('siteName')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2016-09-01",
+      "name": "[variables('webAppPrimaryName')]",
+      "location": "[parameters('siteLocation')]",
       "sku": {
-        "type": "string",
-        "defaultValue": "",
-        "metadata": {
-          "description": "The SKU of the webapps."
-        }
-      },
-      "repoUrl": {
-        "type": "string",
-        "defaultValue": "",
-        "metadata": {
-          "description": "The address of the GitHub repo."
-        }
-      },
-      "branch": {
-        "type": "string",
-        "defaultValue": "",
-        "metadata": {
-          "description": "The branch of the GitHub repo."
+        "name": "[variables('appServicePlanSku')]",
+        "capacity": 1
+      }
+    },
+    {
+      "type": "Microsoft.Web/Sites",
+      "apiVersion": "2015-08-01",
+      "name": "[variables('webAppPrimaryName')]",
+      "location": "[parameters('siteLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.Web/serverFarms/', variables('webAppPrimaryName'))]"
+      ],
+      "properties": {
+        "name": "[variables('webAppPrimaryName')]",
+        "serverFarmId": "[variables('webAppPrimaryName')]",
+        "siteConfig": {
+          "phpVersion": "off",
+          "appSettings": [
+            {
+              "Name": "EndpointURL",
+              "Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('siteName'))).documentEndpoint]"
+            },
+            {
+              "Name": "AuthKey",
+              "Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('siteName')), '2015-04-08').primaryMasterKey]"
+            }
+          ]
         }
       }
     },
-	"variables": {
-		"webAppPrimaryName": "[concat(parameters('siteName'), '-', replace(parameters('siteLocation'), ' ', '-'))]",
-		"webAppSecondaryName": "[concat(parameters('siteName'), '-', replace(parameters('secondaryLocation'), ' ', '-'))]",
-		"createSecondaryLocation": "[and(greater(length(parameters('secondaryLocation')), 0), not(equals(parameters('siteLocation'), parameters('secondaryLocation'))))]",
-		"appServicePlanSku": "S1",
-		"sourceUrl": "https://github.com/jahlen/Planetzine.git"
-	},
-	"resources": [
-		{
-			"name": "[parameters('siteName')]",
-			"type": "Microsoft.DocumentDB/databaseAccounts",
-			"kind": "GlobalDocumentDB",
-			"apiVersion": "2015-04-08",
-			"tags": {
-				"defaultExperience": "DocumentDB"
-			},
-			"location": "[parameters('siteLocation')]",
-			"properties": {
-				"databaseAccountOfferType": "Standard",
-				"consistencyPolicy": {
-					"defaultConsistencyLevel": "Session",
-					"maxIntervalInSeconds": 5,
-					"maxStalenessPrefix": 100
-				},
-				"name": "[parameters('siteName')]"
-			}
-		},
-		{
-			"type": "Microsoft.Web/serverfarms",
-			"apiVersion": "2016-09-01",
-			"name": "[variables('webAppPrimaryName')]",
-			"location": "[parameters('siteLocation')]",
-			"sku": {
-				"name": "[variables('appServicePlanSku')]",
-				"capacity": 1
-			}
-		},
-		{
-			"type": "Microsoft.Web/Sites",
-			"apiVersion": "2015-08-01",
-			"name": "[variables('webAppPrimaryName')]",
-			"location": "[parameters('siteLocation')]",
-			"dependsOn": [
-				"[concat('Microsoft.Web/serverFarms/', variables('webAppPrimaryName'))]"
-			],
-			"properties": {
-				"name": "[variables('webAppPrimaryName')]",
-				"serverFarmId": "[variables('webAppPrimaryName')]",
-				"siteConfig": {
-					"phpVersion": "off",
-					"appSettings": [
-						{
-							"Name": "EndpointURL",
-							"Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('siteName'))).documentEndpoint]"
-						},
-						{
-							"Name": "AuthKey",
-							"Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('siteName')), '2015-04-08').primaryMasterKey]"
-						}
-					]
-				}
-			}
-		},
-		{
-			"type": "Microsoft.Web/serverfarms",
-			"apiVersion": "2016-09-01",
-			"name": "[variables('webAppSecondaryName')]",
-			"location": "[parameters('secondaryLocation')]",
-			"condition": "[variables('createSecondaryLocation')]",
-			"sku": {
-				"name": "[variables('appServicePlanSku')]",
-				"capacity": 1
-			}
-		},
-		{
-			"type": "Microsoft.Web/Sites",
-			"apiVersion": "2015-08-01",
-			"name": "[variables('webAppSecondaryName')]",
-			"location": "[parameters('secondaryLocation')]",
-			"condition": "[variables('createSecondaryLocation')]",
-			"dependsOn": [
-				"[concat('Microsoft.Web/serverFarms/', variables('webAppSecondaryName'))]"
-			],
-			"properties": {
-				"name": "[variables('webAppSecondaryName')]",
-				"serverFarmId": "[variables('webAppSecondaryName')]",
-				"siteConfig": {
-					"phpVersion": "off",
-					"appSettings": [
-						{
-							"Name": "EndpointURL",
-							"Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('siteName'))).documentEndpoint]"
-						},
-						{
-							"Name": "AuthKey",
-							"Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('siteName')), '2015-04-08').primaryMasterKey]"
-						}
-					]
-				}
-			}
-		}
-	],
-	"outputs": {}
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2016-09-01",
+      "name": "[variables('webAppSecondaryName')]",
+      "location": "[parameters('secondaryLocation')]",
+      "condition": "[variables('createSecondaryLocation')]",
+      "sku": {
+        "name": "[variables('appServicePlanSku')]",
+        "capacity": 1
+      }
+    },
+    {
+      "type": "Microsoft.Web/Sites",
+      "apiVersion": "2015-08-01",
+      "name": "[variables('webAppSecondaryName')]",
+      "location": "[parameters('secondaryLocation')]",
+      "condition": "[variables('createSecondaryLocation')]",
+      "dependsOn": [
+        "[concat('Microsoft.Web/serverFarms/', variables('webAppSecondaryName'))]"
+      ],
+      "properties": {
+        "name": "[variables('webAppSecondaryName')]",
+        "serverFarmId": "[variables('webAppSecondaryName')]",
+        "siteConfig": {
+          "phpVersion": "off",
+          "appSettings": [
+            {
+              "Name": "EndpointURL",
+              "Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('siteName'))).documentEndpoint]"
+            },
+            {
+              "Name": "AuthKey",
+              "Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('siteName')), '2015-04-08').primaryMasterKey]"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {}
 }
