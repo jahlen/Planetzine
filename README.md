@@ -26,3 +26,5 @@ Visit [my blog](https://www.johanahlen.info/en/tag/azure-cosmos-db/) for more re
 ## Screenshots
 ![Planetzine screenshot 1](/SCREENSHOT1.png?raw=true "Planetzine screenshot 1")
 ![Planetzine screenshot 2](/SCREENSHOT2.png?raw=true "Planetzine screenshot 2")
+
+[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://azuredeploy.net/)
