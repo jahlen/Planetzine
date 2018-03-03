@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
@@ -134,12 +135,12 @@ namespace Planetzine.Common
 
         public async static Task<Article[]> GetSampleArticles()
         {
-            var titles = new[] { "Cosmos_DB", "Redis", "Voldemort_(distributed_data_store)" };
+            var titles = ConfigurationManager.AppSettings["WikipediaSampleArticles"].Split(',');
 
             var articles = new List<Article>();
             foreach (var title in titles)
             {
-                var article = (Article)(dynamic)await WikipediaReader.GenerateArticleFromWikipedia(title);
+                var article = await WikipediaReader.GenerateArticleFromWikipedia(title);
                 articles.Add(article);
             }
 

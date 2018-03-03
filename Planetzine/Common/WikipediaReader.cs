@@ -29,6 +29,7 @@ namespace Planetzine.Common
         public static async Task<string> DownloadWikipediaArticle(string title)
         {
             var client = new WebClient();
+            client.Headers.Add("user-agent", "Planetzine/1.0 (https://github.com/jahlen/Planetzine)");
             var data = await client.DownloadDataTaskAsync(CreateQueryUrl(title));
             var str = Encoding.UTF8.GetString(data);
             return str;
