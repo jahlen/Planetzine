@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Configuration;
 using Microsoft.Azure.Documents.Linq;
 
-namespace Planetzine.Models
+namespace Planetzine.Common
 {
     public class DbHelper
     {
@@ -40,7 +40,7 @@ namespace Planetzine.Models
         /// Init() method must be called before using any other methods on DbHelper. Creates the DocumentClient.
         /// </summary>
         /// <returns></returns>
-        public static async Task Init()
+        public static async Task InitAsync()
         {
             CurrentRegion = GetCurrentAzureRegion();
 
@@ -53,13 +53,13 @@ namespace Planetzine.Models
                 MaxConnectionLimit = MaxConnectionLimit,
                 RetryOptions = new RetryOptions { MaxRetryAttemptsOnThrottledRequests = 10, MaxRetryWaitTimeInSeconds = 30 }
             };
-            ConnectionPolicy.PreferredLocations.Add(await GetNearestAzureReadRegion());
+            ConnectionPolicy.PreferredLocations.Add(await GetNearestAzureReadRegionAsync());
 
             Client = new DocumentClient(new Uri(EndpointUrl), AuthKey, ConnectionPolicy, ConsistencyLevel);
             await Client.OpenAsync(); // Preload routing tables, to avoid a startup latency on the first request.
         }
 
-        private static async Task<IEnumerable<DatabaseAccountLocation>> GetAvailableAzureReadRegions()
+        private static async Task<IEnumerable<DatabaseAccountLocation>> GetAvailableAzureReadRegionsAsync()
         {
             using (var client = new DocumentClient(new Uri(EndpointUrl), AuthKey, ConnectionPolicy.Default))
             {
@@ -73,9 +73,9 @@ namespace Planetzine.Models
             return Environment.GetEnvironmentVariable("REGION_NAME") ?? "local";
         }
 
-        private static async Task<string> GetNearestAzureReadRegion()
+        private static async Task<string> GetNearestAzureReadRegionAsync()
         {
-            var regions = (await GetAvailableAzureReadRegions()).ToDictionary(region => region.Name);
+            var regions = (await GetAvailableAzureReadRegionsAsync()).ToDictionary(region => region.Name);
             var currentRegion = GetCurrentAzureRegion();
 
             // If there is a readable location in the current region, chose it
@@ -87,12 +87,12 @@ namespace Planetzine.Models
             return regions.Values.First().Name;
         }
 
-        public static async Task CreateDatabase()
+        public static async Task CreateDatabaseAsync()
         {
             await Client.CreateDatabaseIfNotExistsAsync(new Database { Id = DatabaseId });
         }
 
-        public static async Task CreateCollection(string collectionId, string partitionKey)
+        public static async Task CreateCollectionAsync(string collectionId, string partitionKey)
         {
             var myCollection = new DocumentCollection();
             myCollection.Id = collectionId;
@@ -104,52 +104,52 @@ namespace Planetzine.Models
                 new RequestOptions { OfferThroughput = InitialThroughput });
         }
 
-        public static async Task DeleteCollection(string collectionId)
+        public static async Task DeleteCollectionAsync(string collectionId)
         {
             var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
 
             await Client.DeleteDocumentCollectionAsync(uri);
         }
 
-        public static async Task DeleteDatabase()
+        public static async Task DeleteDatabaseAsync()
         {
             var uri = UriFactory.CreateDatabaseUri(DatabaseId);
 
             await Client.DeleteDatabaseAsync(uri);
         }
 
-        public static async Task CreateDocument(object document, string collectionId)
+        public static async Task CreateDocumentAsync(object document, string collectionId)
         {
             var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
             var response = await Client.CreateDocumentAsync(uri, document);
             RequestCharge += response.RequestCharge;
         }
 
-        public static async Task UpsertDocument(object document, string collectionId)
+        public static async Task UpsertDocumentAsync(object document, string collectionId)
         {
             var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
             var response = await Client.UpsertDocumentAsync(uri, document);
             RequestCharge += response.RequestCharge;
         }
 
-        public static async Task ReplaceDocument(object document, string documentId, string collectionId)
+        public static async Task ReplaceDocumentAsync(object document, string documentId, string collectionId)
         {
             var uri = UriFactory.CreateDocumentUri(DatabaseId, collectionId, documentId);
             var response = await Client.ReplaceDocumentAsync(uri, document);
             RequestCharge += response.RequestCharge;
         }
 
-        public static async Task<DocumentResponse<T>> GetDocument<T>(string documentId, object partitionKey, string collectionId)
+        public static async Task<DocumentResponse<T>> GetDocumentAsync<T>(string documentId, object partitionKey, string collectionId)
         {
             var uri = UriFactory.CreateDocumentUri(DatabaseId, collectionId, documentId);
 
             var response = await Client.ReadDocumentAsync<T>(uri, new RequestOptions { PartitionKey = new PartitionKey(partitionKey) });
             RequestCharge += response.RequestCharge;
-
+            
             return response;
         }
 
-        public static async Task DeleteDocument(string documentId, object partitionKey, string collectionId)
+        public static async Task DeleteDocumentAsync(string documentId, object partitionKey, string collectionId)
         {
             var uri = UriFactory.CreateDocumentUri(DatabaseId, collectionId, documentId);
 
@@ -157,7 +157,16 @@ namespace Planetzine.Models
             RequestCharge += response.RequestCharge;
         }
 
-        public static async Task<T[]> ExecuteQuery<T>(string sql, string collectionId, bool enableCrossPartitionQuery)
+        public static async Task DeleteAllDocumentsAsync(string collectionId)
+        {
+            var documents = await ExecuteQueryAsync<dynamic>($"SELECT c.id, c.partitionId FROM {collectionId} AS c", collectionId, true);
+            foreach (var document in documents)
+            {
+                await DeleteDocumentAsync(document.id, document.partitionId, collectionId);
+            }
+        }
+
+        public static async Task<T[]> ExecuteQueryAsync<T>(string sql, string collectionId, bool enableCrossPartitionQuery)
         {
             var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
             var query = Client.CreateDocumentQuery<T>(uri, sql, new FeedOptions { EnableCrossPartitionQuery = enableCrossPartitionQuery }).AsDocumentQuery();
@@ -173,7 +182,7 @@ namespace Planetzine.Models
             return results.ToArray();
         }
 
-        public static async Task<T> ExecuteScalarQuery<T>(string sql, string collectionId, bool enableCrossPartitionQuery)
+        public static async Task<T> ExecuteScalarQueryAsync<T>(string sql, string collectionId, bool enableCrossPartitionQuery)
         {
             var uri = UriFactory.CreateDocumentCollectionUri(DatabaseId, collectionId);
             var query = Client.CreateDocumentQuery<T>(uri, sql, new FeedOptions { EnableCrossPartitionQuery = enableCrossPartitionQuery }).AsDocumentQuery();

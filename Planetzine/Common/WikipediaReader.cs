@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Planetzine.Models
+namespace Planetzine.Common
 {
     public static class WikipediaReader
     {

@@ -150,13 +150,13 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\Article.cs" />
-    <Compile Include="Models\Articles.cs" />
-    <Compile Include="Models\DbHelper.cs" />
+    <Compile Include="Common\Article.cs" />
+    <Compile Include="Models\Index.cs" />
+    <Compile Include="Common\DbHelper.cs" />
     <Compile Include="Models\Diagnostics.cs" />
-    <Compile Include="Models\ExtensionMethods.cs" />
+    <Compile Include="Common\ExtensionMethods.cs" />
     <Compile Include="Models\PerformanceTest.cs" />
-    <Compile Include="Models\WikipediaReader.cs" />
+    <Compile Include="Common\WikipediaReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +169,7 @@
     <Content Include="Images\CosmosDB.png" />
     <Content Include="Images\earth-11015_640.jpg" />
     <Content Include="Images\news-1074604_1280.jpg" />
+    <Content Include="Images\speed-164063_640.jpg" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="ApplicationInsights.config">

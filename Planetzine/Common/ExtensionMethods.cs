@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Text.RegularExpressions;
 
-namespace Planetzine.Models
+namespace Planetzine.Common
 {
     public static class ExtensionMethods
     {

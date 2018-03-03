@@ -8,7 +8,7 @@ using System.Web.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Planetzine.Models
+namespace Planetzine.Common
 {
     public class Article
     {
@@ -77,7 +77,7 @@ namespace Planetzine.Models
 
         public async Task Create()
         {
-            await DbHelper.CreateDocument(this, CollectionId);
+            await DbHelper.CreateDocumentAsync(this, CollectionId);
         }
 
         public async static Task Create(IEnumerable<Article> articles)
@@ -88,47 +88,47 @@ namespace Planetzine.Models
 
         public async Task Upsert()
         {
-            await DbHelper.UpsertDocument(this, CollectionId);
+            await DbHelper.UpsertDocumentAsync(this, CollectionId);
         }
 
         public async Task Delete()
         {
-            await DbHelper.DeleteDocument(ArticleId.ToString(), Author, CollectionId);
+            await DbHelper.DeleteDocumentAsync(ArticleId.ToString(), Author, CollectionId);
         }
 
         public static async Task<Article> Read(Guid articleId, string author)
         {
-            var article = await DbHelper.GetDocument<Article>(articleId.ToString(), author, CollectionId);
+            var article = await DbHelper.GetDocumentAsync<Article>(articleId.ToString(), author, CollectionId);
             return article;
         }
 
         public static async Task<Article[]> GetAll()
         {
-            var articles = await DbHelper.ExecuteQuery<Article>("SELECT * FROM articles", CollectionId, true);
+            var articles = await DbHelper.ExecuteQueryAsync<Article>("SELECT * FROM articles", CollectionId, true);
             return articles;
         }
 
         public static async Task<Article[]> SearchByAuthor(string author)
         {
-            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE a.author = '{author}'", CollectionId, true);
+            var articles = await DbHelper.ExecuteQueryAsync<Article>($"SELECT * FROM articles AS a WHERE a.author = '{author}'", CollectionId, true);
             return articles;
         }
 
         public static async Task<Article[]> SearchByTag(string tag)
         {
-            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE ARRAY_CONTAINS(a.tags, '{tag}')", CollectionId, true);
+            var articles = await DbHelper.ExecuteQueryAsync<Article>($"SELECT * FROM articles AS a WHERE ARRAY_CONTAINS(a.tags, '{tag}')", CollectionId, true);
             return articles;
         }
 
         public static async Task<Article[]> SearchByFreetext(string freetext)
         {
-            var articles = await DbHelper.ExecuteQuery<Article>($"SELECT * FROM articles AS a WHERE CONTAINS(UPPER(a.body), '{freetext.ToUpper()}')", CollectionId, true);
+            var articles = await DbHelper.ExecuteQueryAsync<Article>($"SELECT * FROM articles AS a WHERE CONTAINS(UPPER(a.body), '{freetext.ToUpper()}')", CollectionId, true);
             return articles;
         }
 
         public async static Task<long> GetNumberOfArticles()
         {
-            var articleCount = await DbHelper.ExecuteScalarQuery<dynamic>("SELECT VALUE COUNT(1) FROM articles", Article.CollectionId, true);
+            var articleCount = await DbHelper.ExecuteScalarQueryAsync<dynamic>("SELECT VALUE COUNT(1) FROM articles", Article.CollectionId, true);
             return articleCount;
         }
 
@@ -139,7 +139,7 @@ namespace Planetzine.Models
             var articles = new List<Article>();
             foreach (var title in titles)
             {
-                var article = await WikipediaReader.GenerateArticleFromWikipedia(title);
+                var article = (Article)(dynamic)await WikipediaReader.GenerateArticleFromWikipedia(title);
                 articles.Add(article);
             }
 

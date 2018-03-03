@@ -33,7 +33,12 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; Copyright Johan Åhlén @DateTime.Now.Year</p>
+
+            <div class="pull-right">Request Units consumed by last query: <strong>@Planetzine.MvcApplication.GetConsumedRUs()</strong></div>
+
+            <p>
+                &copy; Copyright Johan Åhlén @DateTime.Now.Year
+            </p>
         </footer>
     </div>
 

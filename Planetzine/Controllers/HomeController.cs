@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using Planetzine.Models;
+using Planetzine.Common;
 
 namespace Planetzine.Controllers
 {
@@ -12,9 +13,7 @@ namespace Planetzine.Controllers
     {
         public async Task<ActionResult> Index(string tag, string author, string freeTextSearch)
         {
-            await Planetzine.MvcApplication.DatabaseReady.Task; // Make sure database and collection is created before continuing
-
-            var articles = new Articles();
+            var articles = new Index();
             if (!string.IsNullOrEmpty(tag))
                 articles.Items = await Article.SearchByTag(tag);
             else if (!string.IsNullOrEmpty(author))
@@ -24,6 +23,7 @@ namespace Planetzine.Controllers
             else
                 articles.Items = await Article.GetAll();
 
+            //ViewBag.ConsumedRUs = DbHelper.RequestCharge - initialRequestCharge;
             return View(articles);
         }
 
@@ -53,15 +53,16 @@ namespace Planetzine.Controllers
             button = button.ToLower();
             if (button == "delete")
             {
-                await DbHelper.DeleteDatabase();
+                await DbHelper.DeleteDatabaseAsync();
                 ViewBag.Message = "Database deleted! It will be recreated next time you restart the application.";
             }
             if (button == "reset")
             {
-                await DbHelper.DeleteCollection(Article.CollectionId);
-                await DbHelper.CreateCollection(Article.CollectionId, Article.PartitionKey);
+                //await DbHelper.DeleteCollection(Article.CollectionId);
+                //await DbHelper.CreateCollection(Article.CollectionId, Article.PartitionKey);
+                await DbHelper.DeleteAllDocumentsAsync(Article.CollectionId);
                 await Article.Create(await Article.GetSampleArticles());
-                ViewBag.Message = "Articles recreated.";
+                ViewBag.Message = "Articles deleted and recreated.";
             }
 
             var diagnostics = new Diagnostics();
@@ -114,6 +115,27 @@ namespace Planetzine.Controllers
             }
 
             return View(article);
+        }
+
+        [HttpGet]
+        public ActionResult PerformanceTest()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> PerformanceTest(PerformanceTest test)
+        {
+            try
+            {
+                await test.RunTests();
+                ViewBag.Message = "Tests completed. Run the tests multiple times to get stable results.";
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Message = $"<p>Tests failed.</p><p>{ex.GetType().Name}</p><p>{ex.Message}</p><p>{ex.StackTrace}</p>";
+            }
+            return View(test);
         }
     }
 }
