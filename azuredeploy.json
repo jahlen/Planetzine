@@ -184,6 +184,10 @@
       "type": "Microsoft.Network/trafficManagerProfiles",
       "name": "[variables('siteName')]",
       "location": "global",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('webAppPrimaryName'))]",
+        "[resourceId('Microsoft.Web/sites', variables('webAppSecondaryName'))]"
+      ],
       "properties": {
         "profileStatus": "Enabled",
         "trafficRoutingMethod": "Performance",
