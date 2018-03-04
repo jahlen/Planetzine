@@ -1,7 +1,7 @@
 # Planetzine
 A sample app using Azure Cosmos DB.
 
-This project demonstrates how to build a news web app that uses a globally distributed Azure Cosmos DB. It demonstrates the following functionality:
+This project shows how to build a news web app that uses a globally distributed Azure Cosmos DB. It demonstrates the following functionality:
 * Reading from the nearest database location ("local reads")
 * Search articles by author, tags or full-text search
 * Populating with sample articles (from Wikipedia)
@@ -11,7 +11,7 @@ This project demonstrates how to build a news web app that uses a globally distr
 ### Deploy to Azure
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjahlen%2Fplanetzine%2Fmaster%2Fazuredeploy.json)
 
-You must chose a unique Site Name, for example **planetzine-yourname**.
+Click the "Deploy to Azure" button. You must chose a unique Site Name, for example **planetzine-yourname**.
 
 * If you have provided a *Secondary Location*, there will be an Azure Traffic Manager and two web apps. The address would then be something like: **http://planetzine-yourname.trafficmanager.net**
 * If you don't have a *Secondary Location*, there will only be one web app and no Azure Traffic Manager. The address will be something like: **http://planetzine-yourname-region.azurewebsites.net**
@@ -21,7 +21,7 @@ Have patience! The deployment in the Azure Portal can take around 10 minutes.
 Note that to support Azure Traffic Manager, you must select at least Sku S1.
 
 ### Test locally
-* Create the necessary services in Azure (either manually or by clicking the "Deploy to Azure button" above: 
+* Create the necessary services in Azure (either manually or by clicking the "Deploy to Azure" button above: 
   * Azure Cosmos DB account
   * One or more Azure Web Apps
   * Azure Traffic Manager
