@@ -13,8 +13,10 @@ This project demonstrates how to build a news web app that uses a globally distr
 
 You must chose a unique Site Name, for example **planetzine-yourname**.
 
-* If you have provided a *Secondary Location*, the template will create an Azure Traffic Manager and two web apps. The address would then be something like: **http://planetzine-yourname.trafficmanager.net**
-* If you don't have a *Secondary Location*, there will only be one web app. The address will be something like: **http://planetzine-yourname-region.azurewebsites.net**
+* If you have provided a *Secondary Location*, there will be an Azure Traffic Manager and two web apps. The address would then be something like: **http://planetzine-yourname.trafficmanager.net**
+* If you don't have a *Secondary Location*, there will only be one web app and no Azure Traffic Manager. The address will be something like: **http://planetzine-yourname-region.azurewebsites.net**
+
+Have patience! The deployment in the Azure Portal can take around 10 minutes.
 
 Note that to support Azure Traffic Manager, you must select at least Sku S1.
 
