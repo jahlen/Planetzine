@@ -18,7 +18,7 @@
     },
     "secondaryLocation": {
       "type": "string",
-      "defaultValue": "",
+      "defaultValue": "West Europe",
       "metadata": {
         "description": "The name of the secondary location (or leave blank to skip)."
       }
@@ -36,6 +36,13 @@
       "metadata": {
         "description": "The branch of the GitHub repo."
       }
+    },
+    "appServicePlanSku": {
+      "type": "string",
+      "defaultValue": "S1",
+      "metadata": {
+        "description": "Must be minimum S1 if using Azure Traffic Manager."
+      }
     }
   },
   "variables": {
@@ -43,7 +50,24 @@
     "webAppPrimaryName": "[concat(variables('siteName'), '-', replace(parameters('siteLocation'), ' ', '-'))]",
     "webAppSecondaryName": "[concat(variables('siteName'), '-', replace(parameters('secondaryLocation'), ' ', '-'))]",
     "createSecondaryLocation": "[and(greater(length(parameters('secondaryLocation')), 0), not(equals(parameters('siteLocation'), parameters('secondaryLocation'))))]",
-    "appServicePlanSku": "S1"
+
+    "cosmosDbLocations1": [
+      {
+        "locationName": "[parameters('siteLocation')]",
+        "failoverPriority": 0
+      }
+    ],
+    "cosmosDbLocations2": [
+      {
+        "locationName": "[parameters('siteLocation')]",
+        "failoverPriority": 0
+      },
+      {
+        "locationName": "[parameters('secondaryLocation')]",
+        "failoverPriority": 1
+      }
+    ],
+    "cosmosDbLocations": "[if(variables('createSecondaryLocation'), variables('cosmosDbLocations2'), variables('cosmosDbLocations1'))]"
   },
   "resources": [
     {
@@ -62,17 +86,7 @@
           "maxIntervalInSeconds": 5,
           "maxStalenessPrefix": 100
         },
-        "locations": [
-          {
-            "locationName": "[parameters('siteLocation')]",
-            "failoverPriority": 0
-          },
-          {
-            "locationName": "[parameters('secondaryLocation')]",
-            "failoverPriority": 1,
-            "condition": "[variables('createSecondaryLocation')]"
-          }
-        ]
+        "locations": "[variables('cosmosDbLocations')]"
       }
     },
     {
@@ -81,7 +95,7 @@
       "name": "[variables('webAppPrimaryName')]",
       "location": "[parameters('siteLocation')]",
       "sku": {
-        "name": "[variables('appServicePlanSku')]",
+        "name": "[parameters('appServicePlanSku')]",
         "capacity": 1
       }
     },
@@ -133,7 +147,7 @@
       "location": "[parameters('secondaryLocation')]",
       "condition": "[variables('createSecondaryLocation')]",
       "sku": {
-        "name": "[variables('appServicePlanSku')]",
+        "name": "[parameters('appServicePlanSku')]",
         "capacity": 1
       }
     },
@@ -168,6 +182,7 @@
           "name": "web",
           "type": "sourcecontrols",
           "apiVersion": "2015-08-01",
+          "condition": "[variables('createSecondaryLocation')]",
           "dependsOn": [
             "[resourceId('Microsoft.Web/sites', variables('webAppSecondaryName'))]"
           ],
@@ -184,6 +199,7 @@
       "type": "Microsoft.Network/trafficManagerProfiles",
       "name": "[variables('siteName')]",
       "location": "global",
+      "condition": "[variables('createSecondaryLocation')]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', variables('webAppPrimaryName'))]",
         "[resourceId('Microsoft.Web/sites', variables('webAppSecondaryName'))]"
