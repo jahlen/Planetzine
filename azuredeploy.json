@@ -4,7 +4,7 @@
   "parameters": {
     "siteName": {
       "type": "string",
-      "defaultValue": "[concat('planetzine-', uniqueString(subscription().subscriptionId))]",
+      "defaultValue": "",
       "metadata": {
         "description": "The name of the database account and web app you want to create. Must be unique."
       }
@@ -39,15 +39,15 @@
     }
   },
   "variables": {
-    "webAppPrimaryName": "[concat(parameters('siteName'), '-', replace(parameters('siteLocation'), ' ', '-'))]",
-    "webAppSecondaryName": "[concat(parameters('siteName'), '-', replace(parameters('secondaryLocation'), ' ', '-'))]",
+    "siteName": "[toLower(parameters('siteName'))]",
+    "webAppPrimaryName": "[concat(variables('siteName'), '-', replace(parameters('siteLocation'), ' ', '-'))]",
+    "webAppSecondaryName": "[concat(variables('siteName'), '-', replace(parameters('secondaryLocation'), ' ', '-'))]",
     "createSecondaryLocation": "[and(greater(length(parameters('secondaryLocation')), 0), not(equals(parameters('siteLocation'), parameters('secondaryLocation'))))]",
-    "appServicePlanSku": "S1",
-    "sourceUrl": "https://github.com/jahlen/Planetzine.git"
+    "appServicePlanSku": "S1"
   },
   "resources": [
     {
-      "name": "[parameters('siteName')]",
+      "name": "[variables('siteName')]",
       "type": "Microsoft.DocumentDB/databaseAccounts",
       "kind": "GlobalDocumentDB",
       "apiVersion": "2015-04-08",
@@ -62,7 +62,17 @@
           "maxIntervalInSeconds": 5,
           "maxStalenessPrefix": 100
         },
-        "name": "[parameters('siteName')]"
+        "locations": [
+          {
+            "locationName": "[parameters('siteLocation')]",
+            "failoverPriority": 0
+          },
+          {
+            "locationName": "[parameters('secondaryLocation')]",
+            "failoverPriority": 1,
+            "condition": "[variables('createSecondaryLocation')]"
+          }
+        ]
       }
     },
     {
@@ -91,11 +101,11 @@
           "appSettings": [
             {
               "Name": "EndpointURL",
-              "Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('siteName'))).documentEndpoint]"
+              "Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', variables('siteName'))).documentEndpoint]"
             },
             {
               "Name": "AuthKey",
-              "Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('siteName')), '2015-04-08').primaryMasterKey]"
+              "Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', variables('siteName')), '2015-04-08').primaryMasterKey]"
             }
           ]
         }
@@ -144,11 +154,11 @@
           "appSettings": [
             {
               "Name": "EndpointURL",
-              "Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', parameters('siteName'))).documentEndpoint]"
+              "Value": "[reference(concat('Microsoft.DocumentDb/databaseAccounts/', variables('siteName'))).documentEndpoint]"
             },
             {
               "Name": "AuthKey",
-              "Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('siteName')), '2015-04-08').primaryMasterKey]"
+              "Value": "[listKeys(resourceId('Microsoft.DocumentDb/databaseAccounts', variables('siteName')), '2015-04-08').primaryMasterKey]"
             }
           ]
         }
@@ -172,7 +182,7 @@
     {
       "apiVersion": "2017-05-01",
       "type": "Microsoft.Network/trafficManagerProfiles",
-      "name": "[parameters('siteName')]",
+      "name": "[variables('siteName')]",
       "location": "global",
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', variables('webAppPrimaryName'))]"
@@ -181,7 +191,7 @@
         "profileStatus": "Enabled",
         "trafficRoutingMethod": "Performance",
         "dnsConfig": {
-          "relativeName": "[parameters('siteName')]",
+          "relativeName": "[variables('siteName')]",
           "ttl": 30
         },
         "monitorConfig": {
