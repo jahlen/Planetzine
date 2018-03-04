@@ -8,7 +8,7 @@ This project shows how to build a news web app that uses a globally distributed 
 * Measuring the number of Request Units consumed
 
 ## Setup
-### Deploy to Azure
+### Test in Azure
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjahlen%2Fplanetzine%2Fmaster%2Fazuredeploy.json)
 
 Click the "Deploy to Azure" button. You must chose a unique Site Name, for example **planetzine-yourname**.
@@ -20,16 +20,13 @@ Have patience! The deployment in the Azure Portal can take around 10 minutes.
 
 Note that to support Azure Traffic Manager, you must select at least Sku S1.
 
-### Test locally
-* Create the necessary services in Azure (either manually or by clicking the "Deploy to Azure" button above: 
-  * Azure Cosmos DB account
-  * One or more Azure Web Apps
-  * Azure Traffic Manager
-* Edit **Web.config**
-  * **EndpointURL** and **AuthKey** must be changed to point to your own account
+### Develop and test locally
+* Create an Azure Cosmos DB account in Azure (or use the Azure Cosmos DB Emulator). Select the SQL API.
+* Download the source code and open in Visual Studio. Edit **Web.config**.
+  * **EndpointURL** and **AuthKey** must be changed to point to your Azure Cosmos DB account
   * The remaining parameters can optionally be changed, but their default values should work.
 
-You can run the web app locally in Visual Studio. You can also replace the Azure Cosmos DB account with the Azure Cosmos DB emulator.
+You can create an Azure Cosmos DB account for free [here](https://azure.microsoft.com/en-us/try/cosmosdb/).
 
 
 ## More reading
