@@ -9,7 +9,7 @@ This project shows how to build a news web app that uses a globally distributed 
 
 ## Setup
 ### Test in Azure
-[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjahlen%2Fplanetzine%2Fmaster%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjahlen%2Fplanetzine%2Fmaster%2Fazuredeploy.json)
 
 Click the "Deploy to Azure" button. You must chose a unique Site Name, for example **planetzine-yourname**.
 
