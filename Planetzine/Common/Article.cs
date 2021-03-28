@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Configuration;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -31,7 +27,6 @@ namespace Planetzine.Common
 
         [JsonProperty("body")]
         [Required]
-        [AllowHtml]
         public string Body { get; set; }
 
         [JsonProperty("tags")]
@@ -56,7 +51,7 @@ namespace Planetzine.Common
         public string PublishDateStr => PublishDate.ToString("MMMM dd, yyyy").Capitalize();
 
         [JsonIgnore]
-        public string TagsStr => string.Join(",", Tags);
+        public string TagsStr => Tags != null ? (string.Join(",", Tags)) : "";
 
         [JsonIgnore]
         public bool IsNew => ArticleId == Guid.Empty;
@@ -78,7 +73,7 @@ namespace Planetzine.Common
 
         public async Task Create()
         {
-            await DbHelper.CreateDocumentAsync(this, CollectionId);
+            await CosmosDbHelper.CreateDocumentAsync(this, CollectionId);
         }
 
         public async static Task Create(IEnumerable<Article> articles)
@@ -89,47 +84,47 @@ namespace Planetzine.Common
 
         public async Task Upsert()
         {
-            await DbHelper.UpsertDocumentAsync(this, CollectionId);
+            await CosmosDbHelper.UpsertDocumentAsync(this, CollectionId);
         }
 
         public async Task Delete()
         {
-            await DbHelper.DeleteDocumentAsync(ArticleId.ToString(), Author, CollectionId);
+            await CosmosDbHelper.DeleteDocumentAsync(ArticleId.ToString(), Author, CollectionId);
         }
 
         public static async Task<Article> Read(Guid articleId, string author)
         {
-            var article = await DbHelper.GetDocumentAsync<Article>(articleId.ToString(), author, CollectionId);
+            var article = await CosmosDbHelper.GetDocumentAsync<Article>(articleId.ToString(), author, CollectionId);
             return article;
         }
 
         public static async Task<Article[]> GetAll()
         {
-            var articles = await DbHelper.ExecuteQueryAsync<Article>("SELECT * FROM articles", CollectionId, true);
+            var articles = await CosmosDbHelper.ExecuteQueryAsync<Article>("SELECT * FROM articles", CollectionId, true);
             return articles;
         }
 
         public static async Task<Article[]> SearchByAuthor(string author)
         {
-            var articles = await DbHelper.ExecuteQueryAsync<Article>($"SELECT * FROM articles AS a WHERE a.author = '{author}'", CollectionId, true);
+            var articles = await CosmosDbHelper.ExecuteQueryAsync<Article>($"SELECT * FROM articles AS a WHERE a.author = '{author}'", CollectionId, true);
             return articles;
         }
 
         public static async Task<Article[]> SearchByTag(string tag)
         {
-            var articles = await DbHelper.ExecuteQueryAsync<Article>($"SELECT * FROM articles AS a WHERE ARRAY_CONTAINS(a.tags, '{tag}')", CollectionId, true);
+            var articles = await CosmosDbHelper.ExecuteQueryAsync<Article>($"SELECT * FROM articles AS a WHERE ARRAY_CONTAINS(a.tags, '{tag}')", CollectionId, true);
             return articles;
         }
 
         public static async Task<Article[]> SearchByFreetext(string freetext)
         {
-            var articles = await DbHelper.ExecuteQueryAsync<Article>($"SELECT * FROM articles AS a WHERE CONTAINS(UPPER(a.body), '{freetext.ToUpper()}')", CollectionId, true);
+            var articles = await CosmosDbHelper.ExecuteQueryAsync<Article>($"SELECT * FROM articles AS a WHERE CONTAINS(UPPER(a.body), '{freetext.ToUpper()}')", CollectionId, true);
             return articles;
         }
 
         public async static Task<long> GetNumberOfArticles()
         {
-            var articleCount = await DbHelper.ExecuteScalarQueryAsync<dynamic>("SELECT VALUE COUNT(1) FROM articles", Article.CollectionId, true);
+            var articleCount = await CosmosDbHelper.ExecuteScalarQueryAsync<dynamic>("SELECT VALUE COUNT(1) FROM articles", Article.CollectionId, true);
             return articleCount;
         }
 

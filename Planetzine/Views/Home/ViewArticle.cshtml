@@ -1,0 +1,28 @@
+﻿@model Planetzine.Common.Article
+@{
+    ViewBag.Title = Model.Heading;
+}
+
+<p>&nbsp;</p>
+<h1>@Model.Heading</h1>
+<hr />
+
+<div class="media">
+    <div class="mr-3">
+        <img class="media-object img-rounded" style="width:240px;" src="@Model.ImageUrl" />
+    </div>
+    <div class="media-body">
+        <p>@Html.Raw(Model.Body)</p>
+        <ul class="list-inline list-unstyled">
+            <li>&#x1F4C5; @Model.PublishDateStr</li>
+            <li>&#x1F471; Written by <a href="@Url.Action("Index", new { author = Model.Author })">@Model.Author</a></li>
+            <li>
+@foreach (var tag in Model.Tags)
+{
+                <a class="badge badge-info" href="@Url.Action("Index", new { tag })">@tag</a>
+}
+            </li>
+            <li><a class="btn btn-sm btn-success" href="@Url.Action("Edit", new { Model.ArticleId, Model.Author })">Edit</a></li>
+        </ul>
+    </div>
+</div>

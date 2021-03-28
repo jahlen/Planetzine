@@ -1,40 +1,37 @@
-﻿@model Planetzine.Models.Index
+﻿@model Planetzine.Models.IndexModel
 @{
     ViewBag.Title = "Home Page";
 }
 
-<div class="row">
-    <div class="col-md-12">
         <h1>Planetzine</h1>
         <p>A sample app using Azure Cosmos DB</p>
-        <p><img class="img-responsive" src="~/Images/news-1074604_1280.jpg" /></p>
+        <p><img class="img-fluid" src="~/Images/news-1074604_1280.jpg" /></p>
 @using (Html.BeginForm("Index", "Home", FormMethod.Get))
 {
     <p class="text-right">@Html.TextBox("FreeTextSearch", "", new { placeholder = "Free text search...", style = "width: 200px;" }) <button class="btn btn-info">Search</button></p>
 }
     <h2>Articles</h2>
-    </div>
+        <hr />
 
 @foreach (var article in Model.Items)
 {
-    <div class="well">
         <div class="media">
-            <a class="pull-left" href="@Url.Action("View", new { article.ArticleId, article.Author })">
+            <a class="mr-3" href="@Url.Action("View", new { article.ArticleId, article.Author })">
                 <img class="media-object img-rounded" style="width:160px;" src="@article.ImageUrl"/>
             </a>
             <div class="media-body">
-                <h3 class="media-heading"><a href="@Url.Action("View", new { article.ArticleId, article.Author })">@article.Heading</a></h3>
+                <h3 class="media-heading"><a href="@Url.Action("ViewArticle", new { article.ArticleId, article.Author })">@article.Heading</a></h3>
                 <p>@article.Excerpt</p>
                 <ul class="list-inline list-unstyled">
                     <li>&#x1F4C5; @article.PublishDateStr</li>
                     <li>&#x1F471; Written by <a href="@Url.Action("Index", new { author = article.Author })">@article.Author</a></li>
+                    <li>
 @foreach (var tag in article.Tags)
 {
-                    <li><a class="label label-info" href="@Url.Action("Index", new { tag })">@tag</a></li>
+                    <a class="badge badge-info" href="@Url.Action("Index", new { tag })">@tag</a>
 }
+                    </li>
                 </ul>
             </div>
         </div>
-    </div>
 }
-</div>

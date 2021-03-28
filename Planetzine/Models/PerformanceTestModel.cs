@@ -10,7 +10,7 @@ using Planetzine.Common;
 
 namespace Planetzine.Models
 {
-    public class PerformanceTest
+    public class PerformanceTestModel
     {
         public struct Results
         {
@@ -51,7 +51,7 @@ namespace Planetzine.Models
                 NumberOfQueryResults = 1;
 
             Writes = await RunCreateTest("Writes", NumberOfWrites);
-            Query = await RunTest("Query", async () => articles = await DbHelper.ExecuteQueryAsync<Article>($"SELECT TOP {NumberOfQueryResults} * FROM {Article.CollectionId} AS c", Article.CollectionId, true), NumberOfQueryResults);
+            Query = await RunTest("Query", async () => articles = await CosmosDbHelper.ExecuteQueryAsync<Article>($"SELECT TOP {NumberOfQueryResults} * FROM {Article.CollectionId} AS c", Article.CollectionId, true), NumberOfQueryResults);
             RandomReads = await RunRandomReadTest("RandomReads", NumberOfRandomReads, articles);
             Upserts = await RunUpsertTest("Upserts", NumberOfUpserts, articles);
         }
@@ -59,20 +59,20 @@ namespace Planetzine.Models
         private async Task<Results> RunTest(string testName, Func<Task> func, int count)
         {
             var stopWatch = Stopwatch.StartNew();
-            var prevRequestCharge = DbHelper.RequestCharge;
+            var prevRequestCharge = CosmosDbHelper.RequestCharge;
             await func();
-            var results = new Results { ElapsedMilliseconds = stopWatch.ElapsedMilliseconds, RUCost = DbHelper.RequestCharge - prevRequestCharge, Name = testName, NumberOfOperations = count };
+            var results = new Results { ElapsedMilliseconds = stopWatch.ElapsedMilliseconds, RUCost = CosmosDbHelper.RequestCharge - prevRequestCharge, Name = testName, NumberOfOperations = count };
             return results;
         }
 
         private async Task<Results> RunCreateTest(string testName, int count)
         {
             var stopWatch = Stopwatch.StartNew();
-            var prevRequestCharge = DbHelper.RequestCharge;
+            var prevRequestCharge = CosmosDbHelper.RequestCharge;
             counter = 0;
             var tasks = Enumerable.Range(0, Parallelism).Select(i => Task.Run(Create)).ToArray();
             await Task.WhenAll(tasks);
-            var results = new Results { ElapsedMilliseconds = stopWatch.ElapsedMilliseconds, RUCost = DbHelper.RequestCharge - prevRequestCharge, Name = testName, NumberOfOperations = count };
+            var results = new Results { ElapsedMilliseconds = stopWatch.ElapsedMilliseconds, RUCost = CosmosDbHelper.RequestCharge - prevRequestCharge, Name = testName, NumberOfOperations = count };
             return results;
 
             async Task Create()
@@ -103,11 +103,11 @@ namespace Planetzine.Models
         private async Task<Results> RunRandomReadTest(string testName, int count, Article[] articles)
         {
             var stopWatch = Stopwatch.StartNew();
-            var prevRequestCharge = DbHelper.RequestCharge;
+            var prevRequestCharge = CosmosDbHelper.RequestCharge;
             counter = 0;
             var tasks = Enumerable.Range(0, Parallelism).Select(i => Task.Run(Read)).ToArray();
             await Task.WhenAll(tasks);
-            var results = new Results { ElapsedMilliseconds = stopWatch.ElapsedMilliseconds, RUCost = DbHelper.RequestCharge - prevRequestCharge, Name = testName, NumberOfOperations = count };
+            var results = new Results { ElapsedMilliseconds = stopWatch.ElapsedMilliseconds, RUCost = CosmosDbHelper.RequestCharge - prevRequestCharge, Name = testName, NumberOfOperations = count };
             return results;
 
             async Task Read()
@@ -134,11 +134,11 @@ namespace Planetzine.Models
         private async Task<Results> RunUpsertTest(string testName, int count, Article[] articles)
         {
             var stopWatch = Stopwatch.StartNew();
-            var prevRequestCharge = DbHelper.RequestCharge;
+            var prevRequestCharge = CosmosDbHelper.RequestCharge;
             counter = 0;
             var tasks = Enumerable.Range(0, Parallelism).Select(i => Task.Run(Upsert)).ToArray();
             await Task.WhenAll(tasks);
-            var results = new Results { ElapsedMilliseconds = stopWatch.ElapsedMilliseconds, RUCost = DbHelper.RequestCharge - prevRequestCharge, Name = testName, NumberOfOperations = count };
+            var results = new Results { ElapsedMilliseconds = stopWatch.ElapsedMilliseconds, RUCost = CosmosDbHelper.RequestCharge - prevRequestCharge, Name = testName, NumberOfOperations = count };
             return results;
 
             async Task Upsert()

@@ -5,27 +5,33 @@ using System.Web;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents;
 using System.Threading.Tasks;
-using System.Configuration;
+using System.Diagnostics;
 using Microsoft.Azure.Documents.Linq;
 
 namespace Planetzine.Common
 {
-    public class DbHelper
+    public class CosmosDbHelper
     {
-        public static readonly string DatabaseId;
-        public static readonly int InitialThroughput;
-        public static readonly int MaxConnectionLimit;
-        public static readonly ConsistencyLevel ConsistencyLevel;
-        public static readonly string EndpointUrl;
-        public static readonly string AuthKey;
+        public static string DatabaseId { get; private set; }
+        public static int InitialThroughput { get; private set; }
+        public static int MaxConnectionLimit { get; private set; }
+        public static ConsistencyLevel ConsistencyLevel { get; private set; }
+        public static string EndpointUrl { get; private set; }
+        public static string AuthKey { get; private set; }
 
-        public static string CurrentRegion;
-        public static ConnectionPolicy ConnectionPolicy;
-        public static DocumentClient Client;
-        public static double RequestCharge;
+        public static string CurrentRegion { get; set; }
+        public static ConnectionPolicy ConnectionPolicy { get; set; }
+        public static DocumentClient Client { get; set; }
+        public static double RequestCharge { get; set; }
 
-        static DbHelper()
+        /// <summary>
+        /// Init() method must be called before using any other methods on DbHelper. Creates the DocumentClient.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task InitAsync()
         {
+            Trace.WriteLine("CosmosDb.InitAsync() starting");
+
             // Init basic settings
             DatabaseId = ConfigurationManager.AppSettings["DatabaseId"];
             InitialThroughput = int.Parse(ConfigurationManager.AppSettings["InitialThroughput"]);
@@ -34,15 +40,9 @@ namespace Planetzine.Common
 
             EndpointUrl = ConfigurationManager.AppSettings["EndpointURL"];
             AuthKey = ConfigurationManager.AppSettings["AuthKey"];
-        }
 
-        /// <summary>
-        /// Init() method must be called before using any other methods on DbHelper. Creates the DocumentClient.
-        /// </summary>
-        /// <returns></returns>
-        public static async Task InitAsync()
-        {
             CurrentRegion = GetCurrentAzureRegion();
+            Trace.WriteLine($"Current Azure region: {CurrentRegion}");
 
             // Create connection policy
             ConnectionPolicy = new ConnectionPolicy
@@ -55,8 +55,10 @@ namespace Planetzine.Common
             };
             ConnectionPolicy.PreferredLocations.Add(await GetNearestAzureReadRegionAsync());
 
+            Trace.WriteLine("Creating database client");
             Client = new DocumentClient(new Uri(EndpointUrl), AuthKey, ConnectionPolicy, ConsistencyLevel);
             await Client.OpenAsync(); // Preload routing tables, to avoid a startup latency on the first request.
+            Trace.WriteLine("Database Client created.");
         }
 
         private static async Task<IEnumerable<DatabaseAccountLocation>> GetAvailableAzureReadRegionsAsync()

@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Planetzine.Models;
 using Planetzine.Common;
 
@@ -13,7 +11,7 @@ namespace Planetzine.Controllers
     {
         public async Task<ActionResult> Index(string tag, string author, string freeTextSearch)
         {
-            var articles = new Index();
+            var articles = new IndexModel();
             if (!string.IsNullOrEmpty(tag))
                 articles.Items = await Article.SearchByTag(tag);
             else if (!string.IsNullOrEmpty(author))
@@ -32,7 +30,7 @@ namespace Planetzine.Controllers
             return View();
         }
 
-        public async Task<ActionResult> View(Guid articleId, string author)
+        public async Task<ActionResult> ViewArticle(Guid articleId, string author)
         {
             var article = await Article.Read(articleId, author);
             return View(article);
@@ -40,10 +38,10 @@ namespace Planetzine.Controllers
 
         public async Task<ActionResult> Diagnostics()
         {
-            await Planetzine.MvcApplication.DatabaseReady.Task; // Make sure database and collection is created before continuing
+            //await Planetzine.MvcApplication.DatabaseReady.Task; // Make sure database and collection is created before continuing
 
-            var diagnostics = new Diagnostics();
-            diagnostics.Results = DbHelper.Diagnostics();
+            var diagnostics = new DiagnosticsModel();
+            diagnostics.Results = CosmosDbHelper.Diagnostics();
             return View(diagnostics);
         }
 
@@ -53,27 +51,27 @@ namespace Planetzine.Controllers
             button = button.ToLower();
             if (button == "delete")
             {
-                await DbHelper.DeleteDatabaseAsync();
+                await CosmosDbHelper.DeleteDatabaseAsync();
                 ViewBag.Message = "Database deleted! It will be recreated next time you restart the application.";
             }
             if (button == "reset")
             {
                 //await DbHelper.DeleteCollection(Article.CollectionId);
                 //await DbHelper.CreateCollection(Article.CollectionId, Article.PartitionKey);
-                await DbHelper.DeleteAllDocumentsAsync(Article.CollectionId);
+                await CosmosDbHelper.DeleteAllDocumentsAsync(Article.CollectionId);
                 await Article.Create(await Article.GetSampleArticles());
                 ViewBag.Message = "Articles deleted and recreated.";
             }
 
-            var diagnostics = new Diagnostics();
+            var diagnostics = new DiagnosticsModel();
             return View(diagnostics);
         }
 
         [HttpGet]
         public async Task<ActionResult> Edit(Guid? articleId, string author, string message)
         {
-            var article = !articleId.HasValue ? 
-                Article.New() : 
+            var article = !articleId.HasValue ?
+                Article.New() :
                 await Article.Read(articleId.Value, author);
 
             if (!string.IsNullOrEmpty(message))
@@ -124,7 +122,7 @@ namespace Planetzine.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> PerformanceTest(PerformanceTest test)
+        public async Task<ActionResult> PerformanceTest(PerformanceTestModel test)
         {
             try
             {

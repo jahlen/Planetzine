@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using Planetzine.Common;
 
 namespace Planetzine.Models
 {
-    public class Diagnostics
+    public class IndexModel
     {
-        public string Results = "";
+        public Article[] Items;
     }
 }

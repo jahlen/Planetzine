@@ -63,11 +63,18 @@ namespace Planetzine.Common
             var str = wikiStr;
             str = regexCategory.Replace(str, ""); // Remove categories
             str = regexRef.Replace(str, ""); // Remove all references
-            str = regexMeta.Replace(str, ""); // Remove {{ }} - first iteration
-            str = regexMeta.Replace(str, ""); // Remove {{ }} - second iteration
+
+            int strlen;
+            do  // Remove {{ }} - and iterate until nothing changes
+            {
+                strlen = str.Length;
+                str = regexMeta.Replace(str, "");
+            } while (str.Length != strlen);
+
             str = regexStrong.Replace(str, match => $"<strong>{match.Groups[1].Value}</strong>"); // Convert strong html
             str = regexHeading.Replace(str, match => $"<h4>{match.Groups[1].Value}</h4>"); // Convert headings to proper html
             str = regexLink.Replace(str, match => $"{match.Groups[1].Value}"); // Convert links
+            str = str.Trim();
             str = str.Replace("\n", "<br/>");
 
             return str;
